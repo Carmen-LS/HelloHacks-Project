@@ -10,6 +10,12 @@ export type Profile = {
   goals: Goal[]
   categories: Category[]
   difficulty: Difficulty
+  firstName?: string
+  lastName?: string
+  birthDate?: string
+  email?: string
+  avatarDataUrl?: string
+  interests?: string[]
 }
 
 export const emptyProfile: Profile = {

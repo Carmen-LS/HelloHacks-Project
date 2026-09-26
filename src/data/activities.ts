@@ -36,6 +36,24 @@ export const difficultyLabels: Record<Difficulty, string> = {
   challenging: 'Challenging',
 }
 
+export const activityIcons: Record<string, string> = {
+  'strength-machines': '🏋️',
+  'free-weights': '🏋️',
+  'cardio-floor': '🚴',
+  'mobility-studio': '🧘',
+  'balance-class': '🧍',
+  'aqua-fitness': '🏊',
+  tennis: '🎾',
+  pickleball: '🏓',
+  badminton: '🏸',
+  golf: '⛳',
+  'track-walk': '🚶',
+  'seawall-walk': '🚶',
+  'forest-hike': '🥾',
+  'hill-walk': '🌿',
+  'park-mobility': '🌳',
+}
+
 export const activities: Activity[] = [
   {
     id: 'strength-machines',

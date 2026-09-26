@@ -4,7 +4,11 @@ import { ExplorePage } from './pages/ExplorePage'
 import { HomePage } from './pages/HomePage'
 import { MapPage } from './pages/MapPage'
 import { SignupPage } from './pages/SignupPage'
+import { WelcomePage } from './pages/WelcomePage'
+import { ConnectionsPage } from './pages/ConnectionsPage'
+import { ProfilePage } from './pages/ProfilePage'
 import { ProfileProvider, useProfile } from './lib/profile-context'
+import { QuestProvider } from './lib/quest-context'
 
 function RequireProfile({ children }: { children: ReactNode }) {
   const { profile } = useProfile()
@@ -15,9 +19,10 @@ function RequireProfile({ children }: { children: ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<WelcomePage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route
-        path="/"
+        path="/home"
         element={
           <RequireProfile>
             <HomePage />
@@ -40,6 +45,8 @@ function AppRoutes() {
           </RequireProfile>
         }
       />
+      <Route path="/connections" element={<RequireProfile><ConnectionsPage /></RequireProfile>} />
+      <Route path="/profile" element={<RequireProfile><ProfilePage /></RequireProfile>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -48,7 +55,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <ProfileProvider>
-      <AppRoutes />
+      <QuestProvider>
+        <AppRoutes />
+      </QuestProvider>
     </ProfileProvider>
   )
 }

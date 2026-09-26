@@ -82,12 +82,11 @@ export function MapPage() {
 
   return (
     <Layout>
-      <section className="hero">
-        <h2>Nearby gyms and facilities</h2>
-        <p>
+      <section className="page-intro">
+        <div><p className="eyebrow">Find welcoming places around you</p><h1>Nearby facilities</h1><p>
           Seeded from public UBC and West Point Grey locations. Pins are approximate, for a
           hackathon prototype.
-        </p>
+        </p></div>
       </section>
 
       <label className="filter-inline">
