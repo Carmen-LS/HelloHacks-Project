@@ -1,0 +1,302 @@
+:root {
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1d2a24;
+  background: #f4efe6;
+  font-size: 18px;
+  --ink: #1d2a24;
+  --muted: #4d5c55;
+  --pine: #1f4d3a;
+  --gold: #e2b04a;
+  --paper: #fffaf2;
+  --line: #d7cbb8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+a {
+  color: var(--pine);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  align-items: end;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: var(--pine);
+  color: #f8f4ea;
+}
+
+.topbar h1,
+.signup h1 {
+  margin: 0.15rem 0 0;
+  font-size: 2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.nav {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.nav a,
+.ghost-link,
+.footer-links a {
+  display: inline-block;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  text-decoration: none;
+  background: #f8f4ea;
+  color: var(--pine);
+  font-weight: 600;
+}
+
+.nav a.active {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.text-btn {
+  background: transparent;
+  color: #f8f4ea;
+  border: 1px solid #f8f4ea;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+}
+
+.main,
+.signup {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 4rem;
+}
+
+.hero h2,
+.signup h1 {
+  margin-top: 0;
+}
+
+.lede,
+.hero p {
+  color: var(--muted);
+  max-width: 42rem;
+}
+
+.form,
+.card,
+.filters,
+.place-item {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.form {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.25rem;
+}
+
+.form label,
+.filters label,
+.filter-inline {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.form input,
+.filters input,
+.filters select,
+.filter-inline select {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: white;
+}
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+legend {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.choice-row,
+.choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.chip {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  font-weight: 500;
+}
+
+.primary {
+  background: var(--pine);
+  color: white;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  padding: 1rem 1.1rem;
+}
+
+.card h3 {
+  margin: 0.35rem 0;
+}
+
+.pill {
+  display: inline-block;
+  margin: 0;
+  background: #e8f0ea;
+  color: var(--pine);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.why,
+.meta,
+.count {
+  color: var(--muted);
+}
+
+.reasons {
+  margin: 0.5rem 0;
+  padding-left: 1.1rem;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0.8rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-inline {
+  max-width: 280px;
+  margin-bottom: 1rem;
+}
+
+.map-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1rem;
+  min-height: 520px;
+}
+
+.map {
+  min-height: 520px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.place-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.place-item {
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.8rem;
+  cursor: pointer;
+}
+
+.place-item.active {
+  outline: 3px solid var(--gold);
+}
+
+.place-item span {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 860px) {
+  .filters,
+  .map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: start;
+  }
+}
