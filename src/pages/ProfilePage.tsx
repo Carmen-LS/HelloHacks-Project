@@ -75,7 +75,7 @@ export function ProfilePage() {
         <div className="profile-main">
           <div className="profile-person">
             <div className="profile-avatar-large">{profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt={`${profile.name} profile`} /> : <span>{initials}</span>}</div>
-            <div className="profile-person-info"><p className="eyebrow">Your WellQuest profile</p><h1>{profile.name}</h1><p>⌖ Vancouver · Here for good company and new adventures</p></div>
+            <div className="profile-person-info"><h1>{profile.name}</h1><p>⌖ Vancouver · Here for good company and new adventures</p></div>
             <label className="photo-upload-button">{profile.avatarDataUrl ? 'Change photo' : 'Add a photo'}<input type="file" accept="image/*" onChange={onPhotoChange} aria-label="Upload a profile photo" /></label>
           </div>
           {message && <p className="profile-message" role="status">{message}</p>}

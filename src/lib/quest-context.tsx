@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Category } from '../data/activities'
 
 export type QuestCategory = 'fitness' | 'sport' | 'outdoor' | 'other'
@@ -89,42 +89,44 @@ function newId() {
 export function QuestProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState(readQuests)
 
-  function update(next: typeof data) {
+  useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     } catch {
       // Keep the current session usable if browser storage is unavailable.
     }
-    setData(next)
-  }
+  }, [data])
 
   const value = useMemo<QuestContextValue>(() => ({
     quests: data.quests,
     joinedQuestIds: data.joinedQuestIds,
-    join: (id) => {
-      if (data.joinedQuestIds.includes(id)) return
-      const quest = data.quests.find((item) => item.id === id)
-      if (!quest || (quest.spots !== undefined && quest.participants >= quest.spots)) return
-      update({
-        quests: data.quests.map((item) => item.id === id ? { ...item, participants: item.participants + 1 } : item),
-        joinedQuestIds: [...data.joinedQuestIds, id],
-      })
-    },
-    cancel: (id) => {
-      if (!data.joinedQuestIds.includes(id)) return
-      const quest = data.quests.find((item) => item.id === id)
-      if (!quest) return
-      const startsAt = new Date(`${quest.date}T${quest.time}`).getTime()
-      if (startsAt - Date.now() < 60 * 60 * 1000) return
-      update({
-        quests: data.quests.map((item) => item.id === id ? { ...item, participants: Math.max(0, item.participants - 1) } : item),
-        joinedQuestIds: data.joinedQuestIds.filter((joinedId) => joinedId !== id),
-      })
-    },
-    create: (quest) => update({
-      quests: [{ ...quest, id: newId(), participants: quest.participants ?? 1 }, ...data.quests],
-      joinedQuestIds: data.joinedQuestIds,
+    join: (id) => setData((current) => {
+      if (current.joinedQuestIds.includes(id)) return current
+      const quest = current.quests.find((item) => item.id === id)
+      if (!quest || (quest.spots !== undefined && quest.participants >= quest.spots)) return current
+      return {
+        quests: current.quests.map((item) => item.id === id ? { ...item, participants: item.participants + 1 } : item),
+        joinedQuestIds: [...current.joinedQuestIds, id],
+      }
     }),
+    cancel: (id) => setData((current) => {
+      if (!current.joinedQuestIds.includes(id)) return current
+      const quest = current.quests.find((item) => item.id === id)
+      if (!quest) return current
+      const startsAt = new Date(`${quest.date}T${quest.time}`).getTime()
+      if (Number.isNaN(startsAt) || startsAt - Date.now() < 60 * 60 * 1000) return current
+      return {
+        quests: current.quests.map((item) => item.id === id ? { ...item, participants: Math.max(0, item.participants - 1) } : item),
+        joinedQuestIds: current.joinedQuestIds.filter((joinedId) => joinedId !== id),
+      }
+    }),
+    create: (quest) => {
+      const created = { ...quest, id: newId(), participants: quest.participants ?? 1 }
+      setData((current) => ({
+        quests: [created, ...current.quests],
+        joinedQuestIds: current.joinedQuestIds,
+      }))
+    },
   }), [data])
 
   return <QuestContext.Provider value={value}>{children}</QuestContext.Provider>
