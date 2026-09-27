@@ -18,7 +18,9 @@ export function HomePage() {
   const firstName = profile.firstName || profile.name.split(' ')[0]
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-  const upcoming = [...quests].sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
+  const upcoming = quests
+    .filter((quest) => new Date(`${quest.date}T${quest.time}`).getTime() >= now.getTime())
+    .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
   const featured = upcoming[0]
   const moreQuests = upcoming.filter((quest) => quest.id !== featured?.id).slice(0, 3)
 
@@ -35,8 +37,8 @@ export function HomePage() {
       {featured && (
         <section className="featured-section">
           <div className="section-heading"><div><p className="eyebrow">Next up</p><h2>Your next quest</h2></div><Link to="/explore">See all <span aria-hidden="true">→</span></Link></div>
-          <div className="home-featured-photo">
-            <div className="photo-caption"><span className="photo-caption-icon" aria-hidden="true">✦</span><div><strong>Make room for a good day.</strong></div></div>
+          <div className={`home-featured-photo${featured.imageUrl ? '' : ' home-featured-photo-fallback'}`} style={featured.imageUrl ? { backgroundImage: `linear-gradient(0deg, rgba(20, 54, 41, .18), transparent 55%), url("${featured.imageUrl}")` } : undefined}>
+            {featured.imageCreditUrl && <a className="image-credit" href={featured.imageCreditUrl} target="_blank" rel="noreferrer">Photo by {featured.imageCredit} · View source</a>}
           </div>
           <QuestCard quest={featured} featured />
         </section>

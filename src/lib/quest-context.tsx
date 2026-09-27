@@ -23,6 +23,9 @@ export type Quest = {
   partnerPreview?: boolean
   lat?: number
   lng?: number
+  imageUrl?: string
+  imageCredit?: string
+  imageCreditUrl?: string
 }
 
 type QuestContextValue = {
@@ -44,7 +47,7 @@ function dateAfter(days: number) {
 
 function starterQuests(): Quest[] {
   return [
-    { id: 'starter-walk', name: 'Morning seawall walk', activityId: 'seawall-walk', category: 'outdoor', intensity: 'gentle', date: dateAfter(1), time: '09:00', location: 'Jericho Beach Park, Vancouver', participants: 5, spots: 8, createdBy: 'WellQuest community', description: 'A relaxed, flat waterfront stroll with time to pause, chat, and enjoy the view.', lat: 49.2722, lng: -123.1978 },
+    { id: 'starter-walk', name: 'Morning seawall walk', activityId: 'seawall-walk', category: 'outdoor', intensity: 'gentle', date: dateAfter(1), time: '09:00', location: 'Jericho Beach Park, Vancouver', participants: 5, spots: 8, createdBy: 'WellQuest community', description: 'A relaxed, flat waterfront stroll with time to pause, chat, and enjoy the view.', imageUrl: 'https://images.unsplash.com/photo-1752560090014-01b60274fd02?auto=format&fit=crop&w=1800&q=82', imageCredit: 'Valerie', imageCreditUrl: 'https://unsplash.com/photos/city-skyline-overlooks-water-and-a-beach-lGRHKVAHodE', lat: 49.2722, lng: -123.1978 },
     { id: 'starter-tennis', name: 'Friendly doubles tennis', activityId: 'tennis', category: 'sport', intensity: 'moderate', date: dateAfter(2), time: '10:00', location: 'Jericho Beach Tennis Courts, Vancouver', participants: 3, spots: 6, createdBy: 'WellQuest community', description: 'A friendly doubles game with warm-up time and a social pace.', lat: 49.2722, lng: -123.1978 },
     { id: 'starter-pickleball', name: 'Pickleball for all levels', activityId: 'pickleball', category: 'sport', intensity: 'gentle', date: dateAfter(3), time: '11:00', location: 'West Point Grey Community Centre, Vancouver', participants: 4, spots: 8, createdBy: 'WellQuest community', description: 'Meet a few neighbours for easygoing games. Equipment can be shared.', lat: 49.2719, lng: -123.2034 },
     { id: 'starter-stretch', name: 'Easy stretch in the garden', activityId: 'mobility-studio', category: 'outdoor', intensity: 'gentle', date: dateAfter(4), time: '09:30', location: 'Vanier Park, Vancouver', participants: 2, spots: 6, createdBy: 'WellQuest community', description: 'A gentle outdoor mobility session. Bring a mat or use a park bench.', lat: 49.2767, lng: -123.1324 },
