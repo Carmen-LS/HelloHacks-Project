@@ -3,6 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Layout } from '../components/Layout'
 import { QuestCard } from '../components/QuestCard'
+import { JoinConfirmationModal } from '../components/JoinConfirmationModal'
 import { useQuests, type Quest } from '../lib/quest-context'
 
 type CategoryFilter = 'all' | 'fitness' | 'sport' | 'social'
@@ -97,7 +98,7 @@ function markerColor(quest: Quest) {
 }
 
 export function ExplorePage() {
-  const { quests } = useQuests()
+  const { quests, join, cancel, joinedQuestIds } = useQuests()
   const [category, setCategory] = useState<CategoryFilter>('all')
   const [intensity, setIntensity] = useState('all')
   const [social, setSocial] = useState<SocialFilter>('all')
@@ -106,6 +107,7 @@ export function ExplorePage() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selectedQuestId, setSelectedQuestId] = useState<string | null>(null)
+  const [bookingQuestId, setBookingQuestId] = useState<string | null>(null)
   const [searchAreaBounds, setSearchAreaBounds] = useState<L.LatLngBounds | null>(null)
   const [areaChanged, setAreaChanged] = useState(false)
   const mapEl = useRef<HTMLDivElement>(null)
@@ -155,7 +157,10 @@ export function ExplorePage() {
         fillOpacity: 1,
         weight: selected ? 4 : 3,
       }).bindTooltip(quest.name, { direction: 'top', offset: [0, -8] })
-      marker.on('click', () => setSelectedQuestId(quest.id))
+      marker.on('click', () => {
+        setSelectedQuestId(quest.id)
+        setBookingQuestId(quest.id)
+      })
       markers.addLayer(marker)
     })
     const selected = visibleQuests.find((quest) => quest.id === selectedQuestId)
@@ -166,7 +171,10 @@ export function ExplorePage() {
 
   useEffect(() => {
     if (selectedQuestId && !visibleQuests.some((quest) => quest.id === selectedQuestId)) setSelectedQuestId(null)
-  }, [visibleQuests, selectedQuestId])
+    if (bookingQuestId && !visibleQuests.some((quest) => quest.id === bookingQuestId)) setBookingQuestId(null)
+  }, [visibleQuests, selectedQuestId, bookingQuestId])
+
+  const bookingQuest = bookingQuestId ? visibleQuests.find((quest) => quest.id === bookingQuestId) : undefined
 
   const isFitness = category === 'fitness'
 
@@ -201,6 +209,16 @@ export function ExplorePage() {
           <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes' : 'Activities'}</h1><p>{visibleQuests.length} {visibleQuests.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
           {visibleQuests.length ? <div className="discover-quest-list">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} compactActions />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
         </section>
+        {bookingQuest && <JoinConfirmationModal
+          quest={bookingQuest}
+          mode={joinedQuestIds.includes(bookingQuest.id) ? 'cancel' : 'join'}
+          onClose={() => setBookingQuestId(null)}
+          onConfirm={() => {
+            if (joinedQuestIds.includes(bookingQuest.id)) cancel(bookingQuest.id)
+            else join(bookingQuest.id)
+            setBookingQuestId(null)
+          }}
+        />}
       </section>
     </Layout>
   )
