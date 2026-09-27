@@ -28,7 +28,7 @@ export function JoinConfirmationModal({
   const available = quest.spots === undefined ? null : Math.max(0, quest.spots - quest.participants)
 
   return (
-    <div className="modal-backdrop booking-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <div className="modal-backdrop booking-backdrop" onClick={(event) => event.stopPropagation()} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
         <button className="modal-close" type="button" onClick={onClose} aria-label="Close">×</button>
         <p className="eyebrow">{mode === 'join' ? (quest.partnerPreview ? 'Partner class preview' : 'Your next plan') : 'Change your plans'}</p>

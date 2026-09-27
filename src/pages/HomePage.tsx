@@ -42,14 +42,6 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="pathways-section">
-          <div className="section-heading"><div><h2>Make it your kind of day</h2></div></div>
-        <div className="pathway-grid">
-          <Link to="/explore" className="pathway-card pathway-move"><span className="pathway-icon" aria-hidden="true">🚶</span><span className="pathway-title">Move</span><span>Stay active and build healthy habits.</span><strong>Explore activities <b aria-hidden="true">→</b></strong></Link>
-          <Link to="/connections" className="pathway-card pathway-connect"><span className="pathway-icon" aria-hidden="true">🤝</span><span className="pathway-title">Connect</span><span>Meet people and build community.</span><strong>Meet people <b aria-hidden="true">→</b></strong></Link>
-          <Link to="/map" className="pathway-card pathway-explore"><span className="pathway-icon" aria-hidden="true">🧭</span><span className="pathway-title">Explore</span><span>Find welcoming places close to home.</span><strong>Open the map <b aria-hidden="true">→</b></strong></Link>
-        </div>
-      </section>
 
       {moreQuests.length > 0 && <section className="nearby-section"><div className="section-heading"><div><p className="eyebrow">Nearby</p><h2>More activities</h2></div><Link to="/explore">See all <span aria-hidden="true">→</span></Link></div><div className="quest-list">{moreQuests.map((quest) => <QuestCard key={quest.id} quest={quest} />)}</div></section>}
 

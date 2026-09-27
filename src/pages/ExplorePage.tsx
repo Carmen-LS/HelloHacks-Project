@@ -177,10 +177,10 @@ export function ExplorePage() {
         <div className="discover-sticky-controls">
         <div className="discover-toolbar">
           <label className="search-field"><span aria-hidden="true">⌕</span><span className="sr-only">Search activities, locations, or keywords</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search activities, location, or keywords..." /></label>
-          <button className="filter-toggle" type="button" aria-expanded={filtersOpen} aria-controls="discover-filters" onClick={() => setFiltersOpen((open) => !open)} aria-label={filtersOpen ? 'Hide filters' : 'Show filters'}><span aria-hidden="true">☷</span></button>
         </div>
         <div className="discover-categories" role="group" aria-label="Activity category">
           {categories.map((item) => <button key={item.id} type="button" className={`discover-category ${item.id}${category === item.id ? ' active' : ''}`} aria-pressed={category === item.id} onClick={() => setCategory(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}
+          <button className="filter-toggle" type="button" aria-expanded={filtersOpen} aria-controls="discover-filters" onClick={() => setFiltersOpen((open) => !open)} aria-label={filtersOpen ? 'Hide filters' : 'Show filters'}><span aria-hidden="true">☷</span></button>
         </div>
 
         <div className="discover-filter-bar" id="discover-filters" hidden={!filtersOpen}>
@@ -200,7 +200,7 @@ export function ExplorePage() {
 
         <section className="discover-upcoming">
           <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes' : 'Activities'}</h1><p>{visibleQuests.length} {visibleQuests.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
-          {visibleQuests.length ? <div className="discover-quest-rail">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} onShowOnMap={() => { setSelectedQuestId(quest.id); if (quest.lat !== undefined && quest.lng !== undefined) mapRef.current?.flyTo([quest.lat, quest.lng], 13) }} />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
+          {visibleQuests.length ? <div className="discover-quest-list">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
         </section>
       </section>
     </Layout>

@@ -28,7 +28,7 @@ function formatDate(date: string, time: string) {
   }
 }
 
-export function QuestCard({ quest, featured = false, selected = false, onShowOnMap }: { quest: Quest; featured?: boolean; selected?: boolean; onShowOnMap?: () => void }) {
+export function QuestCard({ quest, featured = false, selected = false, onShowOnMap, showActions = true }: { quest: Quest; featured?: boolean; selected?: boolean; onShowOnMap?: () => void; showActions?: boolean }) {
   const { join, cancel, joinedQuestIds } = useQuests()
   const { profile } = useProfile()
   const [bookingAction, setBookingAction] = useState<'join' | 'cancel' | null>(null)
@@ -40,7 +40,20 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
   const cancellationAllowed = Date.now() < cancelDeadline
 
   return (
-    <article className={`quest-card${featured ? ' quest-card-featured' : ''}${selected ? ' quest-card-selected' : ''}`}>
+    <article
+      className={`quest-card${featured ? ' quest-card-featured' : ''}${selected ? ' quest-card-selected' : ''}${showActions ? '' : ' quest-card-compact'}`}
+      role={showActions ? undefined : 'button'}
+      tabIndex={showActions ? undefined : 0}
+      aria-label={showActions ? undefined : `Join ${quest.name}`}
+      onClick={showActions ? undefined : () => setBookingAction('join')}
+      onKeyDown={showActions ? undefined : (event) => {
+        if (event.target !== event.currentTarget) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          setBookingAction('join')
+        }
+      }}
+    >
       <div className="quest-card-icon" aria-hidden="true">
         {quest.activityId ? activityIcons[quest.activityId] : categoryIcons[quest.category]}
       </div>
@@ -56,7 +69,7 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
         <p className="quest-meta"><span aria-hidden="true">⌖</span> {quest.location}</p>
         <p className="quest-meta"><span aria-hidden="true">♧</span> {quest.spots === undefined ? `${quest.participants} people going` : `${quest.participants} of ${quest.spots} people going`}</p>
       </div>
-      <div className="quest-card-actions">
+      {showActions && <div className="quest-card-actions">
         {onShowOnMap ? <button className="map-link map-focus-button" type="button" onClick={onShowOnMap}>Show on map</button> : <a className="map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(quest.location)}`} target="_blank" rel="noreferrer">View map</a>}
         <button
           className={joined || hosting ? 'join-button joined' : 'join-button'}
@@ -70,8 +83,8 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
         {joined && (cancellationAllowed
           ? <button className="cancel-booking-link" type="button" onClick={() => setBookingAction('cancel')}>Cancel booking</button>
           : <span className="cancel-cutoff">Cancellation window closed</span>)}
-      </div>
-      {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else cancel(quest.id); setBookingAction(null) }} />}
+      </div>}
+      {showActions && bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else cancel(quest.id); setBookingAction(null) }} />}
     </article>
   )
 }
