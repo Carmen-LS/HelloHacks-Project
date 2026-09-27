@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Quest } from '../lib/quest-context'
 
 function whenLabel(date: string, time: string) {
@@ -27,7 +28,7 @@ export function JoinConfirmationModal({
   const starts = whenLabel(quest.date, quest.time)
   const available = quest.spots === undefined ? null : Math.max(0, quest.spots - quest.participants)
 
-  return (
+  return createPortal((
     <div className="modal-backdrop booking-backdrop" onClick={(event) => event.stopPropagation()} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
         <button className="modal-close" type="button" onClick={onClose} aria-label="Close">×</button>
@@ -61,5 +62,5 @@ export function JoinConfirmationModal({
         )}
       </section>
     </div>
-  )
+  ), document.body)
 }

@@ -33,7 +33,6 @@ function FilterAccordion({
       <button className="filter-accordion-trigger" type="button" aria-expanded={expanded} aria-controls={`filter-options-${id}`} onClick={onToggle}>
         <span className="filter-accordion-title">{title}</span>
         <span className="filter-accordion-value">{selected}</span>
-        <span className="filter-accordion-chevron" aria-hidden="true" />
       </button>
       <div className="filter-accordion-options" id={`filter-options-${id}`} role="group" aria-label={title} hidden={!expanded}>
         {options.map((option) => <button key={option.value} type="button" className={value === option.value ? 'filter-option selected' : 'filter-option'} aria-pressed={value === option.value} onClick={() => onChange(option.value)}>{option.label}</button>)}
@@ -200,7 +199,7 @@ export function ExplorePage() {
 
         <section className="discover-upcoming">
           <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes' : 'Activities'}</h1><p>{visibleQuests.length} {visibleQuests.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
-          {visibleQuests.length ? <div className="discover-quest-list">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
+          {visibleQuests.length ? <div className="discover-quest-list">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} compactActions />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
         </section>
       </section>
     </Layout>

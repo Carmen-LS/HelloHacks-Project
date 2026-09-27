@@ -28,7 +28,7 @@ function formatDate(date: string, time: string) {
   }
 }
 
-export function QuestCard({ quest, featured = false, selected = false, onShowOnMap, showActions = true }: { quest: Quest; featured?: boolean; selected?: boolean; onShowOnMap?: () => void; showActions?: boolean }) {
+export function QuestCard({ quest, featured = false, selected = false, onShowOnMap, showActions = true, compactActions = false }: { quest: Quest; featured?: boolean; selected?: boolean; onShowOnMap?: () => void; showActions?: boolean; compactActions?: boolean }) {
   const { join, cancel, joinedQuestIds } = useQuests()
   const { profile } = useProfile()
   const [bookingAction, setBookingAction] = useState<'join' | 'cancel' | null>(null)
@@ -42,15 +42,15 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
   return (
     <article
       className={`quest-card${featured ? ' quest-card-featured' : ''}${selected ? ' quest-card-selected' : ''}${showActions ? '' : ' quest-card-compact'}`}
-      role={showActions ? undefined : 'button'}
+      role={showActions ? undefined : compactActions ? 'group' : 'button'}
       tabIndex={showActions ? undefined : 0}
-      aria-label={showActions ? undefined : `Join ${quest.name}`}
-      onClick={showActions ? undefined : () => setBookingAction('join')}
+      aria-label={showActions ? undefined : compactActions ? `${quest.name}, ${joined ? 'cancel booking' : 'join activity'}` : `Join ${quest.name}`}
+      onClick={showActions ? undefined : () => setBookingAction(joined ? 'cancel' : 'join')}
       onKeyDown={showActions ? undefined : (event) => {
         if (event.target !== event.currentTarget) return
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
-          setBookingAction('join')
+          setBookingAction(joined ? 'cancel' : 'join')
         }
       }}
     >
@@ -84,7 +84,11 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
           ? <button className="cancel-booking-link" type="button" onClick={() => setBookingAction('cancel')}>Cancel booking</button>
           : <span className="cancel-cutoff">Cancellation window closed</span>)}
       </div>}
-      {showActions && bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else cancel(quest.id); setBookingAction(null) }} />}
+      {compactActions && <div className="quest-card-compact-actions" onClick={(event) => event.stopPropagation()}>
+        {joined ? <button className="compact-cancel-button" type="button" aria-label={`Cancel ${quest.name}`} onClick={() => setBookingAction('cancel')}>Cancel</button>
+          : <button className="compact-join-button" type="button" disabled={hosting || full} onClick={() => setBookingAction('join')}>{hosting ? 'Hosting' : full ? 'Full' : 'Join'}</button>}
+      </div>}
+      {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else cancel(quest.id); setBookingAction(null) }} />}
     </article>
   )
 }

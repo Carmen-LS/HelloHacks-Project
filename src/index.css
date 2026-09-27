@@ -489,7 +489,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .topbar.compact ~ .main .discover-sticky-controls { top: 66px; }
 .discover-filter-bar[hidden] { display: none; }
 .discover-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 11px; align-items: center; }
-.discover-toolbar .search-field input { min-height: 51px; border-radius: 999px; background: white; box-shadow: 0 3px 12px rgba(34,61,49,.04); }
+.discover-toolbar .search-field input { min-height: 51px; border-radius: 999px; background: var(--cream); box-shadow: 0 3px 12px rgba(34,61,49,.04); }
 .filter-toggle { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--pine); background: white; font-size: 1.35rem; cursor: pointer; }
 .filter-toggle:hover { background: var(--pine-light); }
 .discover-categories { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 44px; align-items: center; gap: 8px; margin: 9px 0; }
@@ -506,11 +506,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .discover-category.social.active { color: white; background: #7968bf; }
 .discover-filter-bar { display: grid; grid-template-columns: 1fr; gap: 0; margin: 0 0 14px; padding: 3px 17px; border: 1px solid var(--line); border-radius: 17px; background: #fffefa; box-shadow: 0 4px 14px rgba(34,61,49,.035); scroll-margin-top: 95px; }
 .filter-accordion:not(:last-child) { border-bottom: 1px solid #edf1ed; }
-.filter-accordion-trigger { display: grid; width: 100%; min-height: 51px; grid-template-columns: minmax(0, 1fr) auto 18px; align-items: center; gap: 12px; padding: 0 2px; border: 0; color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
+.filter-accordion-trigger { display: grid; width: 100%; min-height: 51px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 0 2px; border: 0; color: var(--ink); background: transparent; text-align: left; cursor: pointer; }
 .filter-accordion-title { color: #42584b; font-size: .83rem; font-weight: 750; }
 .filter-accordion-value { color: #708076; font-size: .77rem; }
-.filter-accordion-chevron { width: 9px; height: 9px; border-right: 1.8px solid #607267; border-bottom: 1.8px solid #607267; transform: rotate(45deg) translateY(-2px); transition: transform .18s ease; }
-.filter-accordion.expanded .filter-accordion-chevron { transform: rotate(225deg) translate(-2px, -1px); }
 .filter-accordion-options { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 0 12px; }
 .filter-option { min-height: 35px; padding: 0 12px; border: 1px solid #e0e8e1; border-radius: 999px; color: #5f7066; background: white; font-size: .75rem; font-weight: 650; cursor: pointer; }
 .filter-option.selected { border-color: var(--pine); color: white; background: var(--pine); }
@@ -535,7 +533,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .discover-quest-rail { display: grid; grid-auto-columns: minmax(310px, 370px); grid-auto-flow: column; gap: 11px; overflow-x: auto; padding: 1px 1px 10px; scroll-snap-type: x mandatory; scrollbar-color: #c8d7cb transparent; }
 .discover-quest-rail .quest-card { min-height: 160px; align-self: stretch; scroll-snap-align: start; }
 .discover-quest-list { display: grid; gap: 8px; }
-.discover-quest-list .quest-card-compact { grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 0; padding: 10px 12px; border-radius: 15px; box-shadow: 0 3px 12px rgba(34,61,49,.04); }
+.discover-quest-list .quest-card-compact { grid-template-columns: 44px minmax(0, 1fr) 62px; align-items: center; gap: 10px; min-height: 0; padding: 10px 12px; border-radius: 15px; box-shadow: 0 3px 12px rgba(34,61,49,.04); }
 .discover-quest-list .quest-card-compact { cursor: pointer; transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
 .discover-quest-list .quest-card-compact:hover { border-color: #9bb9a4; transform: translateY(-1px); }
 .discover-quest-list .quest-card-compact:focus-visible { outline: 3px solid #d09a4e; outline-offset: 2px; }
@@ -545,6 +543,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .discover-quest-list .quest-card h3 { margin: 0 0 3px; font-size: .92rem; }
 .discover-quest-list .quest-venue { margin: 0 0 2px; font-size: .67rem; }
 .discover-quest-list .quest-meta { margin-top: 1px; font-size: .71rem; line-height: 1.28; }
+.discover-quest-list .quest-card-topline { flex-wrap: nowrap; overflow: hidden; }
+.discover-quest-list .quest-card-topline > * { flex: none; }
+.discover-quest-list .quest-card h3, .discover-quest-list .quest-venue, .discover-quest-list .quest-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quest-card-compact-actions { display: grid; align-self: center; }
+.quest-card-compact-actions button { width: 100%; min-height: 32px; padding: 0 7px; border: 0; border-radius: 999px; color: white; background: var(--pine); font-size: .7rem; font-weight: 750; cursor: pointer; }
+.quest-card-compact-actions button:hover:not(:disabled) { background: var(--pine-dark); }
+.quest-card-compact-actions button:disabled { opacity: .6; cursor: default; }
+.quest-card-compact-actions .compact-cancel-button { border: 1px solid #e6c9bd; color: #9b4b3c; background: #fffaf8; }
 .quest-card-selected { border-color: #74a187; box-shadow: 0 0 0 2px rgba(63,129,91,.16), 0 6px 18px rgba(34,61,49,.09); }
 .quest-venue { margin: -3px 0 4px; color: #4d6e5b; font-size: .73rem; font-weight: 700; }
 .preview-tag { display: inline-flex; min-height: 22px; align-items: center; padding: 2px 8px; border-radius: 999px; color: #59708e; background: #edf3fa; font-size: .66rem; font-weight: 700; }
@@ -614,10 +620,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .discover-upcoming-heading h1 { font-size: 1.08rem; }
   .discover-upcoming-heading p { font-size: .72rem; }
   .discover-quest-list { gap: 7px; }
-  .discover-quest-list .quest-card-compact { grid-template-columns: 39px minmax(0, 1fr); gap: 8px; padding: 8px 9px; border-radius: 13px; }
+  .discover-quest-list .quest-card-compact { grid-template-columns: 37px minmax(0, 1fr) 51px; gap: 7px; padding: 8px 9px; border-radius: 13px; }
   .discover-quest-list .quest-card-icon { width: 37px; height: 37px; font-size: 1.13rem; }
   .discover-quest-list .quest-card h3 { font-size: .84rem; }
   .discover-quest-list .quest-meta { font-size: .67rem; }
+  .quest-card-compact-actions button { min-height: 29px; padding: 0 5px; font-size: .64rem; }
   .search-area-button { top: 10px; min-height: 37px; font-size: .77rem; }
   .booking-backdrop { align-items: flex-end; padding: 0; }
   .booking-modal { width: 100%; max-height: 92svh; padding: 25px 20px calc(20px + env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }

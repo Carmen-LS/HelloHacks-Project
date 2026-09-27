@@ -11,10 +11,14 @@ export function Layout({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState('')
 
   useEffect(() => {
-    const onScroll = () => setCompact(window.scrollY > 16)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    const updateHeader = () => setCompact(window.innerWidth <= 720 && window.scrollY > 16)
+    updateHeader()
+    window.addEventListener('scroll', updateHeader, { passive: true })
+    window.addEventListener('resize', updateHeader)
+    return () => {
+      window.removeEventListener('scroll', updateHeader)
+      window.removeEventListener('resize', updateHeader)
+    }
   }, [])
 
   useEffect(() => {
