@@ -213,9 +213,9 @@ export function ExplorePage() {
           quest={bookingQuest}
           mode={joinedQuestIds.includes(bookingQuest.id) ? 'cancel' : 'join'}
           onClose={() => setBookingQuestId(null)}
-          onConfirm={() => {
-            if (joinedQuestIds.includes(bookingQuest.id)) cancel(bookingQuest.id)
-            else join(bookingQuest.id)
+          onConfirm={async () => {
+            if (joinedQuestIds.includes(bookingQuest.id)) await cancel(bookingQuest.id)
+            else await join(bookingQuest.id)
             setBookingQuestId(null)
           }}
         />}

@@ -32,8 +32,9 @@ export function CreateQuestModal({ onClose, onCreated }: { onClose: () => void; 
   const [time, setTime] = useState('')
   const [location, setLocation] = useState('')
   const [formError, setFormError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault()
     if (!category || !intensity) return
     const startsAt = new Date(`${date}T${time}`)
@@ -45,9 +46,16 @@ export function CreateQuestModal({ onClose, onCreated }: { onClose: () => void; 
       setFormError('Choose a date and time in the future.')
       return
     }
-    create({ name: name.trim(), category, intensity, participants: spots, spots: limitParticipants ? Math.max(participantLimit, spots) : undefined, date, time, location: location.trim(), createdBy: profile?.name ?? 'You' })
-    onCreated()
-    onClose()
+    setSubmitting(true)
+    try {
+      await create({ name: name.trim(), category, intensity, participants: spots, spots: limitParticipants ? Math.max(participantLimit, spots) : undefined, date, time, location: location.trim(), createdBy: profile?.name ?? 'You' })
+      onCreated()
+      onClose()
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Could not post this quest. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const mapSearch = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`
@@ -119,7 +127,7 @@ export function CreateQuestModal({ onClose, onCreated }: { onClose: () => void; 
             <span>Type a place, then adjust it on a map.</span>
             {location.trim() && <a href={mapSearch} target="_blank" rel="noreferrer">Open in Google Maps ↗</a>}
           </div>
-          <button className="primary post-quest" type="submit">Post quest <span aria-hidden="true">→</span></button>
+          <button className="primary post-quest" type="submit" disabled={submitting}>{submitting ? 'Posting…' : <>Post quest <span aria-hidden="true">→</span></>}</button>
         </form>
       </section>
     </div>

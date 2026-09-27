@@ -25,8 +25,18 @@ export function JoinConfirmationModal({
   onConfirm: () => void
 }) {
   const [confirmed, setConfirmed] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
   const starts = whenLabel(quest.date, quest.time)
   const available = quest.spots === undefined ? null : Math.max(0, quest.spots - quest.participants)
+
+  async function confirm() {
+    setSubmitting(true)
+    setError('')
+    try { await onConfirm() }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not update your booking. Please try again.') }
+    finally { setSubmitting(false) }
+  }
 
   return createPortal((
     <div className="modal-backdrop booking-backdrop" onClick={(event) => event.stopPropagation()} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
@@ -49,15 +59,17 @@ export function JoinConfirmationModal({
 
         {mode === 'join' ? (
           <>
-            <div className="booking-policy"><strong>Plans change.</strong> You can cancel up to one hour before the start{quest.partnerPreview ? '. This preview booking is saved in this browser only.' : '.'}</div>
+            <div className="booking-policy"><strong>Plans change.</strong> You can cancel up to one hour before the start.</div>
             {quest.partnerPreview && <p className="demo-data-note">Class schedule, instructor, and availability are sample placeholders. Booking is not sent to the gym.</p>}
             <label className="booking-confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>I’ve reviewed the details and want to reserve a spot.</span></label>
-            <div className="booking-actions"><button className="back-link" type="button" onClick={onClose}>Not now</button><button className="primary" type="button" disabled={!confirmed || (available !== null && available < 1)} onClick={onConfirm}>Confirm spot <span aria-hidden="true">→</span></button></div>
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <div className="booking-actions"><button className="back-link" type="button" onClick={onClose} disabled={submitting}>Not now</button><button className="primary" type="button" disabled={!confirmed || (available !== null && available < 1) || submitting} onClick={() => void confirm()}>{submitting ? 'Saving…' : <>Confirm spot <span aria-hidden="true">→</span></>}</button></div>
           </>
         ) : (
           <>
             <div className="booking-policy">Cancel before {cancellationDeadline(quest.date, quest.time)} to return your spot to the group.</div>
-            <div className="booking-actions"><button className="back-link" type="button" onClick={onClose}>Keep my spot</button><button className="cancel-confirm-button" type="button" onClick={onConfirm}>Cancel booking</button></div>
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <div className="booking-actions"><button className="back-link" type="button" onClick={onClose} disabled={submitting}>Keep my spot</button><button className="cancel-confirm-button" type="button" onClick={() => void confirm()} disabled={submitting}>{submitting ? 'Saving…' : 'Cancel booking'}</button></div>
           </>
         )}
       </section>

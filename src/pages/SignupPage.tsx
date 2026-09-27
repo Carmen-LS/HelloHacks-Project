@@ -34,7 +34,7 @@ function dateString(date: Date) {
 
 export function SignupPage() {
   const navigate = useNavigate()
-  const { save } = useProfile()
+  const { save, signUp, backendConfigured } = useProfile()
   const [step, setStep] = useState<1 | 2>(1)
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [selectedActivities, setSelectedActivities] = useState<string[]>([])
@@ -45,6 +45,7 @@ export function SignupPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const availableActivities = useMemo(
     () => activities.filter((activity) => selectedCategories.includes(activity.category)),
@@ -65,7 +66,7 @@ export function SignupPage() {
     if (canContinue) setStep(2)
   }
 
-  function submitAccount(event: FormEvent) {
+  async function submitAccount(event: FormEvent) {
     event.preventDefault()
     if (password !== confirmPassword) {
       setPasswordError('Those passwords do not match yet.')
@@ -85,9 +86,23 @@ export function SignupPage() {
       difficulty: 'gentle',
       interests: selectedActivities,
     }
-    // This prototype keeps account details in the browser only; the password is intentionally not saved.
-    save(nextProfile)
-    navigate('/home')
+    setSubmitting(true)
+    try {
+      if (backendConfigured) {
+        const result = await signUp(nextProfile, password)
+        if (result.needsEmailConfirmation) {
+          setPasswordError('Account created. Check your email to confirm, then log in.')
+          return
+        }
+      } else {
+        save(nextProfile)
+      }
+      navigate('/home')
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : 'Could not create your account. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -177,8 +192,8 @@ export function SignupPage() {
               </label>
             </div>
             {passwordError && <p className="form-error" role="alert">{passwordError}</p>}
-            <p className="form-note">Your password is only used to complete this demo signup and is not saved.</p>
-            <button className="primary signup-next" type="submit">Create my account <span aria-hidden="true">→</span></button>
+            <p className="form-note">{backendConfigured ? 'Your account is securely managed by Supabase.' : 'Demo mode is active. Connect Supabase to create a shared account.'}</p>
+            <button className="primary signup-next" type="submit" disabled={submitting}>{submitting ? 'Creating account…' : <>Create my account <span aria-hidden="true">→</span></>}</button>
           </form>
         </section>
       )}
