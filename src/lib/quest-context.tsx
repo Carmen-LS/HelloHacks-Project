@@ -14,7 +14,7 @@ export type Quest = {
   time: string
   location: string
   participants: number
-  spots: number
+  spots?: number
   createdBy: string
   description?: string
   venueName?: string
@@ -30,7 +30,7 @@ type QuestContextValue = {
   joinedQuestIds: string[]
   join: (id: string) => void
   cancel: (id: string) => void
-  create: (quest: Omit<Quest, 'id' | 'participants'>) => void
+  create: (quest: Omit<Quest, 'id' | 'participants'> & { participants?: number }) => void
 }
 
 const STORAGE_KEY = 'wellquest-quests'
@@ -104,7 +104,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
     join: (id) => {
       if (data.joinedQuestIds.includes(id)) return
       const quest = data.quests.find((item) => item.id === id)
-      if (!quest || quest.participants >= quest.spots) return
+      if (!quest || (quest.spots !== undefined && quest.participants >= quest.spots)) return
       update({
         quests: data.quests.map((item) => item.id === id ? { ...item, participants: item.participants + 1 } : item),
         joinedQuestIds: [...data.joinedQuestIds, id],
@@ -122,7 +122,7 @@ export function QuestProvider({ children }: { children: ReactNode }) {
       })
     },
     create: (quest) => update({
-      quests: [{ ...quest, id: newId(), participants: 1 }, ...data.quests],
+      quests: [{ ...quest, id: newId(), participants: quest.participants ?? 1 }, ...data.quests],
       joinedQuestIds: data.joinedQuestIds,
     }),
   }), [data])

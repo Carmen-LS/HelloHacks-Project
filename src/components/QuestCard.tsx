@@ -34,7 +34,7 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
   const [bookingAction, setBookingAction] = useState<'join' | 'cancel' | null>(null)
   const joined = joinedQuestIds.includes(quest.id)
   const hosting = quest.createdBy === profile?.name && quest.createdBy !== 'WellQuest community'
-  const full = quest.participants >= quest.spots
+  const full = quest.spots !== undefined && quest.participants >= quest.spots
   const when = formatDate(quest.date, quest.time)
   const cancelDeadline = new Date(`${quest.date}T${quest.time}`).getTime() - 60 * 60 * 1000
   const cancellationAllowed = Date.now() < cancelDeadline
@@ -54,7 +54,7 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
         {quest.venueName && <p className="quest-venue">{quest.venueName}{quest.trainer && <> · {quest.trainer}</>}</p>}
         <p className="quest-meta"><span aria-hidden="true">◷</span> {when.date} · {when.time}</p>
         <p className="quest-meta"><span aria-hidden="true">⌖</span> {quest.location}</p>
-        <p className="quest-meta"><span aria-hidden="true">♧</span> {Math.max(0, quest.spots - quest.participants)} spots left · {quest.participants} going</p>
+        <p className="quest-meta"><span aria-hidden="true">♧</span> {quest.spots === undefined ? `${quest.participants} people going` : `${quest.participants} of ${quest.spots} people going`}</p>
       </div>
       <div className="quest-card-actions">
         {onShowOnMap ? <button className="map-link map-focus-button" type="button" onClick={onShowOnMap}>Show on map</button> : <a className="map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(quest.location)}`} target="_blank" rel="noreferrer">View map</a>}

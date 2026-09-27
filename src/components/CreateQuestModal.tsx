@@ -25,7 +25,9 @@ export function CreateQuestModal({ onClose, onCreated }: { onClose: () => void; 
   const [name, setName] = useState('')
   const [category, setCategory] = useState<QuestCategory | ''>('')
   const [intensity, setIntensity] = useState<QuestIntensity | ''>('')
-  const [spots, setSpots] = useState(4)
+  const [spots, setSpots] = useState(1)
+  const [limitParticipants, setLimitParticipants] = useState(false)
+  const [participantLimit, setParticipantLimit] = useState(8)
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [location, setLocation] = useState('')
@@ -43,7 +45,7 @@ export function CreateQuestModal({ onClose, onCreated }: { onClose: () => void; 
       setFormError('Choose a date and time in the future.')
       return
     }
-    create({ name: name.trim(), category, intensity, spots, date, time, location: location.trim(), createdBy: profile?.name ?? 'You' })
+    create({ name: name.trim(), category, intensity, participants: spots, spots: limitParticipants ? Math.max(participantLimit, spots) : undefined, date, time, location: location.trim(), createdBy: profile?.name ?? 'You' })
     onCreated()
     onClose()
   }
@@ -86,12 +88,19 @@ export function CreateQuestModal({ onClose, onCreated }: { onClose: () => void; 
             </div>
           </fieldset>
 
-          <div className="field-label">Number of people needed <span>*</span> <small>(including you)</small></div>
-          <div className="stepper" aria-label="Number of people needed">
-            <button type="button" aria-label="Fewer people" onClick={() => setSpots((value) => Math.max(2, value - 1))}>−</button>
+          <div className="field-label">People going <small>(including you)</small></div>
+          <div className="stepper" aria-label="Number of people going">
+            <button type="button" aria-label="Fewer people" onClick={() => setSpots((value) => Math.max(1, value - 1))}>−</button>
             <output aria-live="polite">{spots}</output>
             <button type="button" aria-label="More people" onClick={() => setSpots((value) => Math.min(20, value + 1))}>+</button>
           </div>
+
+          <fieldset className="participant-limit-fieldset">
+            <label className="participant-limit-toggle"><input type="checkbox" checked={limitParticipants} onChange={(event) => setLimitParticipants(event.target.checked)} /> Add a participant limit</label>
+            {limitParticipants ? <label className="field-label" htmlFor="quest-participant-limit">Maximum participants
+              <input id="quest-participant-limit" type="number" min={spots} max="100" value={participantLimit} onChange={(event) => setParticipantLimit(Math.max(spots, Number(event.target.value) || spots))} />
+            </label> : <p className="form-note">No participant limit. Anyone can join.</p>}
+          </fieldset>
 
           <div className="form-two-columns">
             <label className="field-label" htmlFor="quest-date">Date <span>*</span>

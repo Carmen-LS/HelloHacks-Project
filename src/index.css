@@ -185,17 +185,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .join-button:disabled { opacity: .83; cursor: default; }
 .join-button.joined { color: var(--pine); background: #e8f1eb; }
 .pathway-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.pathway-card { display: grid; min-height: 194px; align-content: start; gap: 7px; padding: 19px; border: 1px solid transparent; border-radius: 19px; color: var(--ink); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+.pathway-card { display: grid; grid-template-columns: 42px minmax(0, 1fr); min-height: 194px; align-content: start; gap: 6px 10px; padding: 17px; border: 1px solid transparent; border-radius: 19px; color: var(--ink); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
 .pathway-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .pathway-move { border-color: #dceee1; background: linear-gradient(140deg, #ecf6ef, #f6fbf4); }
 .pathway-connect { border-color: #dae8f2; background: linear-gradient(140deg, #eef5fb, #f7f9fb); }
 .pathway-explore { border-color: #f2e4cd; background: linear-gradient(140deg, #fbf3e5, #fcf8f0); }
-.pathway-icon { font-size: 1.8rem; }
-.pathway-title { color: var(--pine); font-size: 1.04rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.pathway-icon { grid-row: span 2; align-self: center; font-size: 1.65rem; }
+.pathway-title { align-self: end; color: var(--pine); font-size: 1.04rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
 .pathway-connect .pathway-title { color: #39699a; }
 .pathway-explore .pathway-title { color: #b1762f; }
-.pathway-card > span:nth-of-type(3) { max-width: 250px; color: var(--muted); font-size: .84rem; }
-.pathway-card strong { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: fit-content; min-width: 150px; margin-top: 8px; padding: 8px 12px; border-radius: 999px; color: white; background: var(--pine); font-size: .78rem; }
+.pathway-card > span:nth-of-type(3) { grid-column: 2; max-width: 250px; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+.pathway-card strong { display: inline-flex; grid-column: 2; align-items: center; justify-content: space-between; gap: 9px; width: fit-content; min-width: 0; margin-top: 4px; padding: 7px 10px; border-radius: 999px; color: white; background: var(--pine); font-size: .74rem; }
 .pathway-connect strong { background: #477cba; }
 .pathway-explore strong { background: #cb8737; }
 .pathway-card strong b { font-size: 1rem; }
@@ -374,7 +374,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .mobile-tabs a > span { height: 29px; font-size: 1.38rem; line-height: 1.2; }
   .mobile-tabs a small { max-width: 100%; overflow: hidden; font-size: .64rem; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-tabs a.active { color: var(--pine); }
-  .mobile-create { display: grid; width: 48px; height: 48px; place-self: center; place-items: center; margin-top: -23px; border: 4px solid var(--cream); border-radius: 50%; color: white; background: var(--pine); box-shadow: 0 4px 10px rgba(24,76,55,.2); font-size: 1.8rem; line-height: 1; cursor: pointer; }
+  .mobile-tabs a.active > span { font-weight: 900; -webkit-text-stroke: 1.25px currentColor; }
+  .mobile-create { display: grid; width: 48px; height: 48px; place-self: center; place-items: center; margin-top: -23px; padding: 0; border: 4px solid var(--cream); border-radius: 50%; color: white; background: var(--pine); box-shadow: 0 4px 10px rgba(24,76,55,.2); font-family: Arial, sans-serif; font-size: 1.8rem; font-weight: 400; line-height: 1; cursor: pointer; }
   .main { padding: 24px 16px 116px; }
   .greeting-row { align-items: flex-start; margin-bottom: 22px; }
   .greeting-row h1 { font-size: 1.55rem; }
@@ -401,11 +402,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .map-link { font-size: .74rem; }
   .cancel-booking-link, .cancel-cutoff { width: 100%; text-align: right; }
   .pathway-grid { grid-template-columns: 1fr; gap: 9px; }
-  .pathway-card { position: relative; grid-template-columns: 44px 1fr; min-height: auto; gap: 3px 10px; padding: 13px; border-radius: 15px; }
-  .pathway-icon { grid-row: span 2; align-self: center; font-size: 1.55rem; }
-  .pathway-title { font-size: .9rem; }
-  .pathway-card > span:nth-of-type(3) { grid-column: 2; font-size: .77rem; }
-  .pathway-card strong { position: absolute; right: 12px; bottom: 13px; min-width: 0; margin: 0; padding: 7px 10px; font-size: .69rem; }
+  .pathway-card { grid-template-columns: 38px minmax(0,1fr); min-height: auto; gap: 2px 9px; padding: 11px 12px; border-radius: 15px; }
+  .pathway-icon { grid-row: span 2; align-self: center; font-size: 1.45rem; }
+  .pathway-title { font-size: .88rem; }
+  .pathway-card > span:nth-of-type(3) { grid-column: 2; padding-right: 2px; font-size: .75rem; }
+  .pathway-card strong { grid-column: 2; justify-self: start; margin-top: 5px; padding: 6px 9px; font-size: .67rem; }
   .pathway-card strong b { display: none; }
   .interest-summary { grid-template-columns: 1fr; gap: 8px; }
   .interest-summary-card { padding: 12px; }
@@ -482,6 +483,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Discover map and class booking */
 .discover-page { margin: -10px 0 0; }
+.discover-sticky-controls { position: sticky; z-index: 70; top: 84px; margin: 0 -2px 12px; padding: 8px 2px 2px; background: rgba(247,248,242,.96); backdrop-filter: blur(12px); }
+.discover-filter-bar[hidden] { display: none; }
 .discover-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) 48px; gap: 11px; align-items: center; }
 .discover-toolbar .search-field input { min-height: 51px; border-radius: 999px; background: white; box-shadow: 0 3px 12px rgba(34,61,49,.04); }
 .filter-toggle { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--pine); background: white; font-size: 1.35rem; cursor: pointer; }
@@ -514,7 +517,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .partner-notice p { margin: 0; font-size: .78rem; line-height: 1.45; }
 .partner-notice strong { color: var(--pine-dark); }
 .discover-map-wrap { position: relative; z-index: 0; isolation: isolate; overflow: hidden; border: 1px solid #dce6df; border-radius: 20px; background: #e8f1e9; box-shadow: 0 6px 20px rgba(34,61,49,.07); }
-.discover-map { width: 100%; height: clamp(340px, 48vh, 550px); }
+.discover-map { width: 100%; height: clamp(255px, 36vh, 410px); }
+.search-area-button { position: absolute; z-index: 500; top: 14px; left: 50%; min-height: 40px; padding: 0 16px; transform: translateX(-50%); border: 1px solid #dce6df; border-radius: 999px; color: var(--pine-dark); background: #fffefa; box-shadow: 0 3px 12px rgba(34,61,49,.16); font-size: .82rem; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.search-area-button:hover { background: #edf5ef; }
 .map-area-label { position: absolute; z-index: 500; bottom: 16px; left: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid rgba(220,230,222,.9); border-radius: 999px; color: #40584b; background: rgba(255,254,250,.92); box-shadow: 0 2px 9px rgba(24,54,40,.1); font-size: .77rem; font-weight: 700; pointer-events: none; }
 .map-area-dot { width: 9px; height: 9px; border: 2px solid white; border-radius: 50%; background: #4b86cf; box-shadow: 0 0 0 2px #4b86cf; }
 .discover-map-wrap .leaflet-control-zoom { overflow: hidden; border: 1px solid #dfe7e0; border-radius: 13px; box-shadow: 0 3px 12px rgba(30,58,44,.12); }
@@ -560,6 +565,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .cancel-confirm-button { min-height: 44px; padding: 0 18px; border: 1px solid #e6c9bd; border-radius: 999px; color: #9b4b3c; background: #fffaf8; font-size: .85rem; font-weight: 700; cursor: pointer; }
 .cancel-confirm-button:hover { background: #fbeee9; }
 
+.interest-edit-button { padding: 7px 13px; border: 1px solid #d9e5dc; border-radius: 999px; color: var(--pine); background: white; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.interest-edit-note { margin: -4px 0 11px; color: var(--muted); font-size: .8rem; }
+.profile-interest-picker { display: flex; flex-wrap: wrap; gap: 8px; max-height: 250px; overflow: auto; }
+.profile-interest-picker label { display: inline-flex; min-height: 37px; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid #e0e8e1; border-radius: 999px; color: #53665a; background: white; font-size: .77rem; cursor: pointer; }
+.profile-interest-picker label.selected { border-color: var(--pine); color: var(--pine-dark); background: #edf5ef; }
+.profile-interest-picker label:has(input:disabled) { opacity: .5; cursor: not-allowed; }
+.profile-interest-picker input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.interest-edit-actions { display: flex; align-items: center; justify-content: flex-end; gap: 15px; margin-top: 14px; }
+.interest-edit-actions .primary { min-height: 40px; padding: 0 15px; font-size: .8rem; }
+
 @media (max-width: 720px) {
   .discover-page { margin: -7px -2px 0; }
   .discover-toolbar { grid-template-columns: minmax(0, 1fr) 43px; gap: 8px; }
@@ -575,14 +590,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .partner-notice { margin-bottom: 10px; padding: 10px 12px; }
   .partner-notice p { font-size: .72rem; }
   .discover-map-wrap { margin: 0 -16px; border-right: 0; border-left: 0; border-radius: 0; }
-  .discover-map { height: clamp(300px, 43svh, 460px); }
+  .discover-sticky-controls { top: 67px; margin: 0 -16px 9px; padding: 7px 16px 1px; }
+  .discover-map { height: clamp(225px, 32svh, 345px); }
   .map-area-label { bottom: 12px; left: 12px; padding: 7px 10px; font-size: .71rem; }
   .discover-upcoming { margin: -19px -16px 0; padding: 19px 14px 12px; border-radius: 21px 21px 0 0; }
   .discover-upcoming-heading { align-items: flex-start; margin-bottom: 11px; }
   .discover-upcoming-heading h1 { font-size: 1.08rem; }
   .discover-upcoming-heading p { font-size: .72rem; }
   .discover-quest-rail { grid-auto-columns: minmax(285px, 84vw); gap: 9px; margin-right: -14px; padding-right: 14px; }
-  .discover-quest-rail .quest-card { min-height: 156px; }
+  .discover-quest-rail { grid-auto-columns: minmax(285px, 84vw); }
+  .discover-quest-rail .quest-card { min-height: 0; gap: 8px; padding: 10px; }
+  .discover-quest-rail .quest-card-icon { width: 39px; height: 39px; font-size: 1.2rem; }
+  .discover-quest-rail .quest-card h3 { margin-bottom: 4px; font-size: .91rem; }
+  .discover-quest-rail .quest-meta { margin-top: 2px; font-size: .7rem; line-height: 1.25; }
+  .discover-quest-rail .quest-card-actions { gap: 4px 8px; }
+  .discover-quest-rail .join-button { min-height: 34px; padding: 0 11px; font-size: .72rem; }
+  .search-area-button { top: 10px; min-height: 37px; font-size: .77rem; }
   .booking-backdrop { align-items: flex-end; padding: 0; }
   .booking-modal { width: 100%; max-height: 92svh; padding: 25px 20px calc(20px + env(safe-area-inset-bottom)); border-radius: 25px 25px 0 0; }
   .booking-modal h2 { font-size: 1.48rem; }

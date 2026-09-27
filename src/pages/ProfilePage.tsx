@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { activities, activityIcons } from '../data/activities'
 import { Layout } from '../components/Layout'
 import { useProfile } from '../lib/profile-context'
@@ -32,12 +31,25 @@ export function ProfilePage() {
   const { profile, save } = useProfile()
   const { quests, joinedQuestIds } = useQuests()
   const [message, setMessage] = useState('')
+  const [editingInterests, setEditingInterests] = useState(false)
+  const [interestDraft, setInterestDraft] = useState<string[]>([])
   if (!profile) return null
   const currentProfile = profile
 
   const initials = profile.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
   const interests = (profile.interests ?? []).map((id) => activities.find((activity) => activity.id === id)).filter((activity) => activity !== undefined)
   const hosted = quests.filter((quest) => quest.createdBy === profile.name).length
+
+  function toggleInterest(id: string) {
+    setInterestDraft((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 5 ? [...current, id] : current)
+  }
+
+  function saveInterests() {
+    const chosen = activities.filter((activity) => interestDraft.includes(activity.id))
+    save({ ...currentProfile, interests: interestDraft, categories: Array.from(new Set(chosen.map((activity) => activity.category))), goals: Array.from(new Set(chosen.flatMap((activity) => activity.goals))) })
+    setEditingInterests(false)
+    setMessage('Your interests have been updated.')
+  }
 
   async function onPhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -73,8 +85,8 @@ export function ProfilePage() {
             <article><strong>Level {Math.floor(joinedQuestIds.length / 5) + 1}</strong><span>Explorer</span><small>Keep discovering</small></article>
           </div>
           <div className="profile-lower-grid">
-            <section className="profile-section"><div className="section-heading"><div><p className="eyebrow">Your journey</p><h2>Things you enjoy</h2></div><Link to="/explore">Find a quest <span aria-hidden="true">→</span></Link></div>
-              {interests.length ? <div className="profile-interest-list">{interests.map((activity) => <div key={activity.id}><span aria-hidden="true">{activityIcons[activity.id]}</span><strong>{activity.name}</strong></div>)}</div> : <p className="muted-copy">Choose a few activities that sound good to you.</p>}
+            <section className="profile-section"><div className="section-heading"><div><p className="eyebrow">Your journey</p><h2>Things you enjoy</h2></div><button className="interest-edit-button" type="button" onClick={() => { setInterestDraft(profile.interests ?? []); setEditingInterests((value) => !value) }}>{editingInterests ? 'Close' : 'Edit'}</button></div>
+              {editingInterests ? <><p className="interest-edit-note">Choose up to 5 activities ({interestDraft.length}/5).</p><div className="profile-interest-picker">{activities.map((activity) => <label key={activity.id} className={interestDraft.includes(activity.id) ? 'selected' : ''}><input type="checkbox" checked={interestDraft.includes(activity.id)} disabled={!interestDraft.includes(activity.id) && interestDraft.length >= 5} onChange={() => toggleInterest(activity.id)} /><span aria-hidden="true">{activityIcons[activity.id]}</span>{activity.name}</label>)}</div><div className="interest-edit-actions"><button type="button" className="back-link" onClick={() => setEditingInterests(false)}>Cancel</button><button type="button" className="primary" onClick={saveInterests}>Save interests</button></div></> : interests.length ? <div className="profile-interest-list">{interests.map((activity) => <div key={activity.id}><span aria-hidden="true">{activityIcons[activity.id]}</span><strong>{activity.name}</strong></div>)}</div> : <p className="muted-copy">Choose a few activities that sound good to you.</p>}
             </section>
             <aside className="profile-reward"><div className="reward-mark" aria-hidden="true">☕</div><p className="eyebrow">A small reward for showing up</p><h2>{joinedQuestIds.length} activities so far</h2><p>Keep exploring. Your next milestone is closer than you think.</p><div className="reward-progress"><span style={{ width: `${Math.min(100, (joinedQuestIds.length % 10) * 10)}%` }} /></div><small>{joinedQuestIds.length % 10} of 10 activities to your next milestone</small></aside>
           </div>

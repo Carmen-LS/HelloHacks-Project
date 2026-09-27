@@ -75,10 +75,11 @@ function categoryMatches(quest: Quest, category: CategoryFilter) {
 }
 
 function groupMatches(quest: Quest, social: SocialFilter) {
+  const size = quest.spots ?? quest.participants
   if (social === 'all') return true
-  if (social === 'one') return quest.spots === 2
-  if (social === 'small') return quest.spots >= 2 && quest.spots <= 5
-  return quest.spots >= 5
+  if (social === 'one') return size <= 2
+  if (social === 'small') return size >= 2 && size <= 5
+  return size >= 5
 }
 
 function timeMatches(quest: Quest, time: TimeFilter) {
@@ -103,8 +104,11 @@ export function ExplorePage() {
   const [social, setSocial] = useState<SocialFilter>('all')
   const [time, setTime] = useState<TimeFilter>('all')
   const [openFilter, setOpenFilter] = useState<string | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [selectedQuestId, setSelectedQuestId] = useState<string | null>(null)
+  const [searchAreaBounds, setSearchAreaBounds] = useState<L.LatLngBounds | null>(null)
+  const [areaChanged, setAreaChanged] = useState(false)
   const mapEl = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const markersRef = useRef<L.LayerGroup | null>(null)
@@ -119,12 +123,17 @@ export function ExplorePage() {
       .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
   }, [category, intensity, query, quests, social, time])
 
+  const visibleQuests = useMemo(() => searchAreaBounds
+    ? filtered.filter((quest) => quest.lat !== undefined && quest.lng !== undefined && searchAreaBounds.contains([quest.lat, quest.lng]))
+    : filtered, [filtered, searchAreaBounds])
+
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return
     const map = L.map(mapEl.current, { zoomControl: false }).setView([49.279, -123.119], 11.5)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map)
     L.control.zoom({ position: 'topright' }).addTo(map)
     markersRef.current = L.layerGroup().addTo(map)
+    map.on('moveend', () => setAreaChanged(true))
     mapRef.current = map
     return () => {
       map.remove()
@@ -137,7 +146,7 @@ export function ExplorePage() {
     const markers = markersRef.current
     if (!map || !markers) return
     markers.clearLayers()
-    filtered.forEach((quest) => {
+    visibleQuests.forEach((quest) => {
       if (quest.lat === undefined || quest.lng === undefined) return
       const selected = quest.id === selectedQuestId
       const marker = L.circleMarker([quest.lat, quest.lng], {
@@ -150,45 +159,48 @@ export function ExplorePage() {
       marker.on('click', () => setSelectedQuestId(quest.id))
       markers.addLayer(marker)
     })
-    const selected = filtered.find((quest) => quest.id === selectedQuestId)
+    const selected = visibleQuests.find((quest) => quest.id === selectedQuestId)
     if (selected?.lat !== undefined && selected.lng !== undefined) {
       map.flyTo([selected.lat, selected.lng], 13, { duration: 0.35 })
     }
-  }, [filtered, selectedQuestId])
+  }, [visibleQuests, selectedQuestId])
 
   useEffect(() => {
-    if (selectedQuestId && !filtered.some((quest) => quest.id === selectedQuestId)) setSelectedQuestId(null)
-  }, [filtered, selectedQuestId])
+    if (selectedQuestId && !visibleQuests.some((quest) => quest.id === selectedQuestId)) setSelectedQuestId(null)
+  }, [visibleQuests, selectedQuestId])
 
   const isFitness = category === 'fitness'
 
   return (
     <Layout>
       <section className="discover-page" aria-label="Discover nearby activities">
+        <div className="discover-sticky-controls">
         <div className="discover-toolbar">
           <label className="search-field"><span aria-hidden="true">⌕</span><span className="sr-only">Search activities, locations, or keywords</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search activities, location, or keywords..." /></label>
-          <button className="filter-toggle" type="button" onClick={() => document.getElementById('discover-filters')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} aria-label="Jump to activity filters"><span aria-hidden="true">☷</span></button>
+          <button className="filter-toggle" type="button" aria-expanded={filtersOpen} aria-controls="discover-filters" onClick={() => setFiltersOpen((open) => !open)} aria-label={filtersOpen ? 'Hide filters' : 'Show filters'}><span aria-hidden="true">☷</span></button>
         </div>
         <div className="discover-categories" role="group" aria-label="Activity category">
           {categories.map((item) => <button key={item.id} type="button" className={`discover-category ${item.id}${category === item.id ? ' active' : ''}`} aria-pressed={category === item.id} onClick={() => setCategory(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}
         </div>
 
-        <div className="discover-filter-bar" id="discover-filters">
+        <div className="discover-filter-bar" id="discover-filters" hidden={!filtersOpen}>
           <FilterAccordion id="intensity" title="Intensity" value={intensity} options={intensityOptions} expanded={openFilter === 'intensity'} onToggle={() => setOpenFilter(openFilter === 'intensity' ? null : 'intensity')} onChange={(value) => setIntensity(value)} />
           <FilterAccordion id="social" title="Social preference" value={social} options={socialOptions} expanded={openFilter === 'social'} onToggle={() => setOpenFilter(openFilter === 'social' ? null : 'social')} onChange={(value) => setSocial(value as SocialFilter)} />
           <FilterAccordion id="time" title="Time of day" value={time} options={timeOptions} expanded={openFilter === 'time'} onToggle={() => setOpenFilter(openFilter === 'time' ? null : 'time')} onChange={(value) => setTime(value as TimeFilter)} />
+        </div>
         </div>
 
         {isFitness && <div className="partner-notice"><span aria-hidden="true">✦</span><p><strong>Fitness partner preview.</strong> Venue addresses are based on official listings. Class schedules, coaches, and spaces left are sample data until gym partners connect.</p></div>}
 
         <div className="discover-map-wrap">
           <div ref={mapEl} className="discover-map" role="application" aria-label="Map of upcoming Vancouver activities" />
+          {areaChanged && <button className="search-area-button" type="button" onClick={() => { const map = mapRef.current; if (!map) return; setSearchAreaBounds(map.getBounds()); setAreaChanged(false); setSelectedQuestId(null) }}>Search this area</button>}
           <div className="map-area-label"><span className="map-area-dot" /> Vancouver &amp; nearby</div>
         </div>
 
         <section className="discover-upcoming">
-          <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes near you' : 'Upcoming activities near you'}</h1><p>{filtered.length} {filtered.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
-          {filtered.length ? <div className="discover-quest-rail">{filtered.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} onShowOnMap={() => { setSelectedQuestId(quest.id); if (quest.lat !== undefined && quest.lng !== undefined) mapRef.current?.flyTo([quest.lat, quest.lng], 13) }} />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match these filters. Try another time or group size.</p></div>}
+          <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes' : 'Activities'}</h1><p>{visibleQuests.length} {visibleQuests.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
+          {visibleQuests.length ? <div className="discover-quest-rail">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} onShowOnMap={() => { setSelectedQuestId(quest.id); if (quest.lat !== undefined && quest.lng !== undefined) mapRef.current?.flyTo([quest.lat, quest.lng], 13) }} />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
         </section>
       </section>
     </Layout>

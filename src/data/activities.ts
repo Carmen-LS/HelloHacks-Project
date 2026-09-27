@@ -52,6 +52,9 @@ export const activityIcons: Record<string, string> = {
   'forest-hike': '🥾',
   'hill-walk': '🌿',
   'park-mobility': '🌳',
+  'tai-chi': '☯️',
+  'dance-social': '💃',
+  'garden-walk': '🌷',
 }
 
 export const activities: Activity[] = [
@@ -205,6 +208,36 @@ export const activities: Activity[] = [
     description: 'Benches for sit-to-stand, light reaching, and easy standing balance near the beach.',
     whyItHelps: 'Turns a walk into practice for getting up, bending, and standing tall.',
     placeIds: ['jericho', 'locarno', 'wpgcc'],
+  },
+  {
+    id: 'tai-chi',
+    name: 'Tai chi in the park',
+    category: 'outdoor',
+    goals: ['balance', 'mobility', 'daily-tasks'],
+    difficulty: 'gentle',
+    description: 'Slow, flowing movements with options to use a chair or stay standing.',
+    whyItHelps: 'Builds balance and comfortable movement through a calm, steady practice.',
+    placeIds: ['jericho', 'locarno', 'wpgcc'],
+  },
+  {
+    id: 'dance-social',
+    name: 'Social dance basics',
+    category: 'sport',
+    goals: ['cardio', 'balance', 'mobility'],
+    difficulty: 'steady',
+    description: 'Learn simple steps at an easy pace, with plenty of time to practice.',
+    whyItHelps: 'Combines light cardio, coordination, and a chance to meet people.',
+    placeIds: ['wpgcc', 'dunbar-cc'],
+  },
+  {
+    id: 'garden-walk',
+    name: 'Garden stroll',
+    category: 'outdoor',
+    goals: ['cardio', 'balance', 'mobility'],
+    difficulty: 'gentle',
+    description: 'An easy walk through leafy paths with regular places to pause.',
+    whyItHelps: 'Adds gentle walking and balance practice to time spent outdoors.',
+    placeIds: ['jericho', 'locarno', 'spanish-banks'],
   },
 ]
 

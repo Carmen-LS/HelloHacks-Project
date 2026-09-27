@@ -25,7 +25,7 @@ export function JoinConfirmationModal({
 }) {
   const [confirmed, setConfirmed] = useState(false)
   const starts = whenLabel(quest.date, quest.time)
-  const available = Math.max(0, quest.spots - quest.participants)
+  const available = quest.spots === undefined ? null : Math.max(0, quest.spots - quest.participants)
 
   return (
     <div className="modal-backdrop booking-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
@@ -41,7 +41,7 @@ export function JoinConfirmationModal({
             <div><dt>When</dt><dd>{starts}</dd></div>
             <div><dt>Where</dt><dd>{quest.location}</dd></div>
           {quest.trainer && <div><dt>Instructor</dt><dd>{quest.trainer}</dd></div>}
-          <div><dt>Spots left</dt><dd>{available}</dd></div>
+          <div><dt>Participants</dt><dd>{quest.participants} going{available === null ? ' · no limit' : ` · ${available} spots left`}</dd></div>
         </dl>
         {quest.venueLink && <a className="booking-venue-link" href={quest.venueLink} target="_blank" rel="noreferrer">Visit venue website ↗</a>}
       </div>
@@ -51,7 +51,7 @@ export function JoinConfirmationModal({
             <div className="booking-policy"><strong>Plans change.</strong> You can cancel up to one hour before the start{quest.partnerPreview ? '. This preview booking is saved in this browser only.' : '.'}</div>
             {quest.partnerPreview && <p className="demo-data-note">Class schedule, instructor, and availability are sample placeholders. Booking is not sent to the gym.</p>}
             <label className="booking-confirm-check"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>I’ve reviewed the details and want to reserve a spot.</span></label>
-            <div className="booking-actions"><button className="back-link" type="button" onClick={onClose}>Not now</button><button className="primary" type="button" disabled={!confirmed || available < 1} onClick={onConfirm}>Confirm spot <span aria-hidden="true">→</span></button></div>
+            <div className="booking-actions"><button className="back-link" type="button" onClick={onClose}>Not now</button><button className="primary" type="button" disabled={!confirmed || (available !== null && available < 1)} onClick={onConfirm}>Confirm spot <span aria-hidden="true">→</span></button></div>
           </>
         ) : (
           <>

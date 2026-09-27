@@ -38,7 +38,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/connections">Connections</NavLink>
         </nav>
         <div className="header-actions">
-          <button className="header-create" type="button" onClick={() => setShowCreate(true)}><span aria-hidden="true">＋</span> Create a quest</button>
+          <button className="header-create" type="button" onClick={() => setShowCreate(true)}><span aria-hidden="true">+</span> Create a quest</button>
           <div className="notification-wrap">
             <button className="icon-button notification-button" type="button" aria-label="Notifications" aria-expanded={showNotifications} onClick={() => setShowNotifications((show) => !show)}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg><span className="notification-dot" />
@@ -54,7 +54,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <nav className="mobile-tabs" aria-label="Mobile navigation">
         <NavLink to="/home"><span aria-hidden="true">⌂</span><small>Home</small></NavLink>
         <NavLink to="/explore"><span aria-hidden="true">⌕</span><small>Discover</small></NavLink>
-        <button type="button" className="mobile-create" onClick={() => setShowCreate(true)} aria-label="Create a quest">＋</button>
+        <button type="button" className="mobile-create" onClick={() => setShowCreate(true)} aria-label="Create a quest">+</button>
         <NavLink to="/connections"><span aria-hidden="true">♧</span><small>Connections</small></NavLink>
         <NavLink to="/profile"><span aria-hidden="true">◉</span><small>Profile</small></NavLink>
       </nav>
