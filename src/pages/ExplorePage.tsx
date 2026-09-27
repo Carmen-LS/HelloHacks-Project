@@ -228,17 +228,11 @@ export function ExplorePage() {
           quest={bookingQuest}
           mode={bookingQuestIsHosted ? 'details' : joinedQuestIds.includes(bookingQuest.id) ? 'cancel' : 'join'}
           onClose={() => setBookingQuestId(null)}
-<<<<<<< HEAD
-          onConfirm={() => {
-            if (!bookingQuestIsHosted) {
-              if (joinedQuestIds.includes(bookingQuest.id)) cancel(bookingQuest.id)
-              else join(bookingQuest.id)
-            }
-=======
           onConfirm={async () => {
-            if (joinedQuestIds.includes(bookingQuest.id)) await cancel(bookingQuest.id)
-            else await join(bookingQuest.id)
->>>>>>> 7a53777cc01ba806b158662b7c7f9aaab203e53f
+            if (!bookingQuestIsHosted) {
+              if (joinedQuestIds.includes(bookingQuest.id)) await cancel(bookingQuest.id)
+              else await join(bookingQuest.id)
+            }
             setBookingQuestId(null)
           }}
         />}
