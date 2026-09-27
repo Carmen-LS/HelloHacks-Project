@@ -89,7 +89,11 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
         {joined ? <button className="compact-cancel-button" type="button" aria-label={`Cancel ${quest.name}`} onClick={() => setBookingAction('cancel')}>Cancel</button>
           : <button className="compact-join-button" type="button" disabled={!hosting && full} onClick={() => setBookingAction(hosting ? 'details' : 'join')}>{hosting ? 'Details' : full ? 'Full' : 'Join'}</button>}
       </div>}
+<<<<<<< HEAD
       {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else if (bookingAction === 'cancel') cancel(quest.id); setBookingAction(null) }} />}
+=======
+      {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={async () => { if (bookingAction === 'join') await join(quest.id); else await cancel(quest.id); setBookingAction(null) }} />}
+>>>>>>> 7a53777cc01ba806b158662b7c7f9aaab203e53f
     </article>
   )
 }

@@ -7,11 +7,13 @@ import { SignupPage } from './pages/SignupPage'
 import { WelcomePage } from './pages/WelcomePage'
 import { ConnectionsPage } from './pages/ConnectionsPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { LoginPage } from './pages/LoginPage'
 import { ProfileProvider, useProfile } from './lib/profile-context'
 import { QuestProvider } from './lib/quest-context'
 
 function RequireProfile({ children }: { children: ReactNode }) {
-  const { profile } = useProfile()
+  const { profile, ready } = useProfile()
+  if (!ready) return null
   if (!profile) return <Navigate to="/signup" replace />
   return children
 }
@@ -21,6 +23,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<WelcomePage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route
         path="/home"
         element={

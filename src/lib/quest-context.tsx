@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Category } from '../data/activities'
+import { supabase } from './supabase'
+import { useProfile } from './profile-context'
 
 export type QuestCategory = 'fitness' | 'sport' | 'outdoor' | 'other'
 export type QuestIntensity = 'gentle' | 'moderate' | 'active'
@@ -31,9 +33,9 @@ export type Quest = {
 type QuestContextValue = {
   quests: Quest[]
   joinedQuestIds: string[]
-  join: (id: string) => void
-  cancel: (id: string) => void
-  create: (quest: Omit<Quest, 'id' | 'participants'> & { participants?: number }) => void
+  join: (id: string) => Promise<void>
+  cancel: (id: string) => Promise<void>
+  create: (quest: Omit<Quest, 'id' | 'participants'> & { participants?: number }) => Promise<void>
 }
 
 const STORAGE_KEY = 'wellquest-quests'
@@ -90,47 +92,124 @@ function newId() {
 }
 
 export function QuestProvider({ children }: { children: ReactNode }) {
+  const { userId, isDemo, backendConfigured, profile } = useProfile()
+  const remoteMode = Boolean(backendConfigured && userId && !isDemo)
   const [data, setData] = useState(readQuests)
 
+  const refreshRemote = async () => {
+    if (!supabase || !userId) return
+    const [{ data: questRows, error: questError }, { data: bookingRows, error: bookingError }] = await Promise.all([
+      supabase.from('quests').select('*').order('event_date').order('event_time'),
+      supabase.from('bookings').select('quest_id').eq('user_id', userId),
+    ])
+    if (questError) throw questError
+    if (bookingError) throw bookingError
+    const quests = (questRows ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      activityId: row.activity_id ?? undefined,
+      category: row.category as QuestCategory,
+      intensity: row.intensity as QuestIntensity,
+      date: row.event_date,
+      time: String(row.event_time).slice(0, 5),
+      location: row.location,
+      participants: row.baseline_participants + row.booked_count,
+      spots: row.capacity ?? undefined,
+      createdBy: row.created_by_name,
+      description: row.description ?? undefined,
+      venueName: row.venue_name ?? undefined,
+      venueLink: row.venue_link ?? undefined,
+      trainer: row.trainer ?? undefined,
+      partnerPreview: row.partner_preview,
+      lat: row.lat ?? undefined,
+      lng: row.lng ?? undefined,
+      imageUrl: row.image_url ?? undefined,
+      imageCredit: row.image_credit ?? undefined,
+      imageCreditUrl: row.image_credit_url ?? undefined,
+    })) as Quest[]
+    setData({ quests, joinedQuestIds: (bookingRows ?? []).map((row) => row.quest_id) })
+  }
+
   useEffect(() => {
+    const client = supabase
+    if (!remoteMode || !client || !userId) return
+    let active = true
+    const refresh = async () => {
+      try { await refreshRemote() }
+      catch (error) {
+        console.error('Could not load shared quests.', error)
+        if (active) setData({ quests: starterQuests(), joinedQuestIds: [] })
+      }
+    }
+    void refresh()
+    const channel = client.channel(`wellquest-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quests' }, () => { void refresh() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => { void refresh() })
+      .subscribe()
+    return () => { active = false; void client.removeChannel(channel) }
+  }, [remoteMode, userId])
+
+  useEffect(() => {
+    if (remoteMode) return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     } catch {
       // Keep the current session usable if browser storage is unavailable.
     }
-  }, [data])
+  }, [data, remoteMode])
 
   const value = useMemo<QuestContextValue>(() => ({
     quests: data.quests,
     joinedQuestIds: data.joinedQuestIds,
-    join: (id) => setData((current) => {
-      if (current.joinedQuestIds.includes(id)) return current
-      const quest = current.quests.find((item) => item.id === id)
-      if (!quest || (quest.spots !== undefined && quest.participants >= quest.spots)) return current
-      return {
-        quests: current.quests.map((item) => item.id === id ? { ...item, participants: item.participants + 1 } : item),
-        joinedQuestIds: [...current.joinedQuestIds, id],
+    join: async (id) => {
+      if (remoteMode && supabase) {
+        const { error } = await supabase.rpc('join_quest', { p_quest_id: id })
+        if (error) throw error
+        await refreshRemote()
+        return
       }
-    }),
-    cancel: (id) => setData((current) => {
-      if (!current.joinedQuestIds.includes(id)) return current
-      const quest = current.quests.find((item) => item.id === id)
-      if (!quest) return current
-      const startsAt = new Date(`${quest.date}T${quest.time}`).getTime()
-      if (Number.isNaN(startsAt) || startsAt - Date.now() < 60 * 60 * 1000) return current
-      return {
-        quests: current.quests.map((item) => item.id === id ? { ...item, participants: Math.max(0, item.participants - 1) } : item),
-        joinedQuestIds: current.joinedQuestIds.filter((joinedId) => joinedId !== id),
-      }
-    }),
-    create: (quest) => {
-      const created = { ...quest, id: newId(), participants: quest.participants ?? 1 }
-      setData((current) => ({
-        quests: [created, ...current.quests],
-        joinedQuestIds: current.joinedQuestIds,
-      }))
+      setData((current) => {
+        if (current.joinedQuestIds.includes(id)) return current
+        const quest = current.quests.find((item) => item.id === id)
+        if (!quest || (quest.spots !== undefined && quest.participants >= quest.spots)) return current
+        return { quests: current.quests.map((item) => item.id === id ? { ...item, participants: item.participants + 1 } : item), joinedQuestIds: [...current.joinedQuestIds, id] }
+      })
     },
-  }), [data])
+    cancel: async (id) => {
+      if (remoteMode && supabase) {
+        const { error } = await supabase.rpc('cancel_quest', { p_quest_id: id })
+        if (error) throw error
+        await refreshRemote()
+        return
+      }
+      setData((current) => {
+        if (!current.joinedQuestIds.includes(id)) return current
+        const quest = current.quests.find((item) => item.id === id)
+        if (!quest) return current
+        const startsAt = new Date(`${quest.date}T${quest.time}`).getTime()
+        if (Number.isNaN(startsAt) || startsAt - Date.now() < 60 * 60 * 1000) return current
+        return { quests: current.quests.map((item) => item.id === id ? { ...item, participants: Math.max(0, item.participants - 1) } : item), joinedQuestIds: current.joinedQuestIds.filter((joinedId) => joinedId !== id) }
+      })
+    },
+    create: async (quest) => {
+      const id = newId()
+      if (remoteMode && supabase && userId) {
+        const { error } = await supabase.from('quests').insert({
+          id, name: quest.name, activity_id: quest.activityId ?? null, category: quest.category, intensity: quest.intensity,
+          event_date: quest.date, event_time: quest.time, location: quest.location, baseline_participants: quest.participants ?? 1,
+          capacity: quest.spots ?? null, created_by: userId, created_by_name: profile?.name ?? 'WellQuest member',
+          description: quest.description ?? null, venue_name: quest.venueName ?? null, venue_link: quest.venueLink ?? null,
+          trainer: quest.trainer ?? null, partner_preview: quest.partnerPreview ?? false, lat: quest.lat ?? null, lng: quest.lng ?? null,
+          image_url: quest.imageUrl ?? null, image_credit: quest.imageCredit ?? null, image_credit_url: quest.imageCreditUrl ?? null,
+        })
+        if (error) throw error
+        await refreshRemote()
+        return
+      }
+      const created = { ...quest, id, participants: quest.participants ?? 1 }
+      setData((current) => ({ quests: [created, ...current.quests], joinedQuestIds: current.joinedQuestIds }))
+    },
+  }), [data, remoteMode, userId, profile])
 
   return <QuestContext.Provider value={value}>{children}</QuestContext.Provider>
 }

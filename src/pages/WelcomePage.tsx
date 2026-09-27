@@ -15,10 +15,14 @@ const demoProfile: Profile = {
 
 export function WelcomePage() {
   const navigate = useNavigate()
-  const { profile, save } = useProfile()
+  const { startDemo } = useProfile()
 
   function login() {
-    if (!profile) save(demoProfile)
+    navigate('/login')
+  }
+
+  function demoLogin() {
+    startDemo(demoProfile)
     navigate('/home')
   }
 
@@ -42,6 +46,7 @@ export function WelcomePage() {
           <button className="welcome-secondary" type="button" onClick={login}>Log in</button>
         </div>
         <p className="welcome-reassurance">A welcoming place to move at your own pace.</p>
+        <button className="welcome-demo-link" type="button" onClick={demoLogin}>Explore the demo</button>
       </section>
       <footer className="photo-credit">Photo by <a href="https://unsplash.com/photos/calm-lake-reflecting-mountains-and-trees-at-sunrise-0v6hKTAWaGk" target="_blank" rel="noreferrer">Deep Doshi on Unsplash</a></footer>
     </main>

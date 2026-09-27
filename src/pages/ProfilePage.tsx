@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { activities, activityIcons } from '../data/activities'
 import { Layout } from '../components/Layout'
 import { useProfile } from '../lib/profile-context'
@@ -28,7 +29,8 @@ function imageToDataUrl(file: File): Promise<string> {
 }
 
 export function ProfilePage() {
-  const { profile, save } = useProfile()
+  const { profile, save, signOut } = useProfile()
+  const navigate = useNavigate()
   const { quests, joinedQuestIds } = useQuests()
   const [message, setMessage] = useState('')
   const [editingInterests, setEditingInterests] = useState(false)
@@ -68,6 +70,15 @@ export function ProfilePage() {
     }
   }
 
+  async function logout() {
+    try {
+      await signOut()
+      navigate('/')
+    } catch {
+      setMessage('Could not sign out. Please try again.')
+    }
+  }
+
   return (
     <Layout>
       <section className="profile-panel">
@@ -91,6 +102,7 @@ export function ProfilePage() {
             <aside className="profile-reward"><div className="reward-mark" aria-hidden="true">☕</div><p className="eyebrow">A small reward for showing up</p><h2>{joinedQuestIds.length} activities so far</h2><p>Keep exploring. Your next milestone is closer than you think.</p><div className="reward-progress"><span style={{ width: `${Math.min(100, (joinedQuestIds.length % 10) * 10)}%` }} /></div><small>{joinedQuestIds.length % 10} of 10 activities to your next milestone</small></aside>
           </div>
           <p className="profile-email">Account email <strong>{profile.email || 'Demo account'}</strong></p>
+          <button className="profile-signout" type="button" onClick={() => void logout()}>Sign out</button>
         </div>
       </section>
     </Layout>

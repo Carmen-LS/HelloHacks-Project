@@ -58,6 +58,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .welcome-secondary { border: 1px solid rgba(255,255,255,.65); color: white; background: rgba(255,255,255,.08); }
 .welcome-secondary:hover { background: rgba(255,255,255,.18); }
 .welcome-reassurance { margin: 22px 0 0; color: rgba(255,255,255,.8); font-size: .88rem; }
+.welcome-demo-link { margin-top: 12px; padding: 0; border: 0; color: rgba(255,255,255,.9); background: transparent; font: inherit; font-size: .82rem; text-decoration: underline; cursor: pointer; }
 .photo-credit { position: absolute; right: 18px; bottom: 13px; color: rgba(255,255,255,.78); font-size: .69rem; }
 .photo-credit a { color: white; }
 
@@ -311,6 +312,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .profile-reward small { margin-top: 6px; color: #88785f; font-size: .72rem; }
 .profile-email { display: flex; justify-content: space-between; gap: 15px; margin: 24px 0 0; padding-top: 17px; border-top: 1px solid var(--line); color: var(--muted); font-size: .84rem; }
 .profile-email strong { color: var(--ink); font-weight: 600; }
+.profile-signout { margin-top: 14px; padding: 8px 0; border: 0; color: var(--pine); background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
 
 /* Map */
 .map-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, 1fr); gap: 16px; min-height: 500px; }
