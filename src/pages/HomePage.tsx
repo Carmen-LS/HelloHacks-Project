@@ -2,12 +2,14 @@ import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
 import { QuestCard } from '../components/QuestCard'
+import { HomeWorkoutModal } from '../components/HomeWorkoutModal'
 import { useProfile } from '../lib/profile-context'
 import { useQuests } from '../lib/quest-context'
 
 export function HomePage() {
   const { profile } = useProfile()
   const { quests, joinedQuestIds } = useQuests()
+  const [showHomeWorkout, setShowHomeWorkout] = useState(false)
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000)
@@ -22,7 +24,6 @@ export function HomePage() {
     .filter((quest) => new Date(`${quest.date}T${quest.time}`).getTime() >= now.getTime())
     .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
   const featured = upcoming[0]
-  const moreQuests = upcoming.filter((quest) => quest.id !== featured?.id).slice(0, 3)
 
   return (
     <Layout>
@@ -45,7 +46,11 @@ export function HomePage() {
       )}
 
 
-      {moreQuests.length > 0 && <section className="nearby-section"><div className="section-heading"><div><p className="eyebrow">Nearby</p><h2>More activities</h2></div><Link to="/explore">See all <span aria-hidden="true">→</span></Link></div><div className="quest-list">{moreQuests.map((quest) => <QuestCard key={quest.id} quest={quest} />)}</div></section>}
+      <section className="home-workout-entry" aria-label="At-home workouts">
+        <div><p className="eyebrow">Your pace, your place</p><h2>Wanna stay home today?</h2><p>Choose a focus and follow a gentle no-equipment tutorial.</p></div>
+        <button type="button" className="home-workout-entry-button" onClick={() => setShowHomeWorkout(true)} aria-haspopup="dialog">Explore home workouts <span aria-hidden="true">→</span></button>
+      </section>
+      {showHomeWorkout && <HomeWorkoutModal onClose={() => setShowHomeWorkout(false)} />}
 
     </Layout>
   )

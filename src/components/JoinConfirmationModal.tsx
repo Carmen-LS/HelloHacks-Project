@@ -20,7 +20,7 @@ export function JoinConfirmationModal({
   onConfirm,
 }: {
   quest: Quest
-  mode: 'join' | 'cancel'
+  mode: 'join' | 'cancel' | 'details'
   onClose: () => void
   onConfirm: () => void
 }) {
@@ -32,8 +32,8 @@ export function JoinConfirmationModal({
     <div className="modal-backdrop booking-backdrop" onClick={(event) => event.stopPropagation()} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
         <button className="modal-close" type="button" onClick={onClose} aria-label="Close">×</button>
-        <p className="eyebrow">{mode === 'join' ? (quest.partnerPreview ? 'Partner class preview' : 'Your next plan') : 'Change your plans'}</p>
-        <h2 id="booking-title">{mode === 'join' ? 'Review your spot' : 'Cancel this booking?'}</h2>
+        <p className="eyebrow">{mode === 'details' ? 'Hosted event' : mode === 'join' ? (quest.partnerPreview ? 'Partner class preview' : 'Your next plan') : 'Change your plans'}</p>
+        <h2 id="booking-title">{mode === 'details' ? 'Your event details' : mode === 'join' ? 'Review your spot' : 'Cancel this booking?'}</h2>
         <div className="booking-event-info">
           {quest.venueName && <span className="booking-venue">{quest.venueName}</span>}
           <h3>{quest.name}</h3>
@@ -47,7 +47,7 @@ export function JoinConfirmationModal({
         {quest.venueLink && <a className="booking-venue-link" href={quest.venueLink} target="_blank" rel="noreferrer">Visit venue website ↗</a>}
       </div>
 
-        {mode === 'join' ? (
+        {mode === 'details' ? null : mode === 'join' ? (
           <>
             <div className="booking-policy"><strong>Plans change.</strong> You can cancel up to one hour before the start{quest.partnerPreview ? '. This preview booking is saved in this browser only.' : '.'}</div>
             {quest.partnerPreview && <p className="demo-data-note">Class schedule, instructor, and availability are sample placeholders. Booking is not sent to the gym.</p>}

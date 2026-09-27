@@ -31,9 +31,10 @@ function formatDate(date: string, time: string) {
 export function QuestCard({ quest, featured = false, selected = false, onShowOnMap, showActions = true, compactActions = false }: { quest: Quest; featured?: boolean; selected?: boolean; onShowOnMap?: () => void; showActions?: boolean; compactActions?: boolean }) {
   const { join, cancel, joinedQuestIds } = useQuests()
   const { profile } = useProfile()
-  const [bookingAction, setBookingAction] = useState<'join' | 'cancel' | null>(null)
+  const [bookingAction, setBookingAction] = useState<'join' | 'cancel' | 'details' | null>(null)
   const joined = joinedQuestIds.includes(quest.id)
   const hosting = quest.createdBy === profile?.name && quest.createdBy !== 'WellQuest community'
+  const openCardAction = () => setBookingAction(joined ? 'cancel' : hosting ? 'details' : 'join')
   const full = quest.spots !== undefined && quest.participants >= quest.spots
   const when = formatDate(quest.date, quest.time)
   const cancelDeadline = new Date(`${quest.date}T${quest.time}`).getTime() - 60 * 60 * 1000
@@ -44,13 +45,13 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
       className={`quest-card${featured ? ' quest-card-featured' : ''}${selected ? ' quest-card-selected' : ''}${showActions ? '' : ' quest-card-compact'}`}
       role={showActions ? undefined : compactActions ? 'group' : 'button'}
       tabIndex={showActions ? undefined : 0}
-      aria-label={showActions ? undefined : compactActions ? `${quest.name}, ${joined ? 'cancel booking' : 'join activity'}` : `Join ${quest.name}`}
-      onClick={showActions ? undefined : () => setBookingAction(joined ? 'cancel' : 'join')}
+      aria-label={showActions ? undefined : hosting ? `View details for ${quest.name}` : compactActions ? `${quest.name}, ${joined ? 'cancel booking' : 'join activity'}` : `Join ${quest.name}`}
+      onClick={showActions ? undefined : openCardAction}
       onKeyDown={showActions ? undefined : (event) => {
         if (event.target !== event.currentTarget) return
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
-          setBookingAction(joined ? 'cancel' : 'join')
+          openCardAction()
         }
       }}
     >
@@ -74,10 +75,10 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
         <button
           className={joined || hosting ? 'join-button joined' : 'join-button'}
           type="button"
-          disabled={joined || hosting || full}
-          onClick={() => setBookingAction('join')}
+          disabled={joined || (!hosting && full)}
+          onClick={() => setBookingAction(hosting ? 'details' : 'join')}
         >
-          {hosting ? 'You’re hosting' : joined ? 'Booked' : full ? 'Full' : quest.partnerPreview ? 'Reserve spot' : 'Join quest'}
+          {hosting ? 'View details' : joined ? 'Booked' : full ? 'Full' : quest.partnerPreview ? 'Reserve spot' : 'Join quest'}
           {!joined && !hosting && !full && <span aria-hidden="true"> →</span>}
         </button>
         {joined && (cancellationAllowed
@@ -86,9 +87,9 @@ export function QuestCard({ quest, featured = false, selected = false, onShowOnM
       </div>}
       {compactActions && <div className="quest-card-compact-actions" onClick={(event) => event.stopPropagation()}>
         {joined ? <button className="compact-cancel-button" type="button" aria-label={`Cancel ${quest.name}`} onClick={() => setBookingAction('cancel')}>Cancel</button>
-          : <button className="compact-join-button" type="button" disabled={hosting || full} onClick={() => setBookingAction('join')}>{hosting ? 'Hosting' : full ? 'Full' : 'Join'}</button>}
+          : <button className="compact-join-button" type="button" disabled={!hosting && full} onClick={() => setBookingAction(hosting ? 'details' : 'join')}>{hosting ? 'Details' : full ? 'Full' : 'Join'}</button>}
       </div>}
-      {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else cancel(quest.id); setBookingAction(null) }} />}
+      {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else if (bookingAction === 'cancel') cancel(quest.id); setBookingAction(null) }} />}
     </article>
   )
 }

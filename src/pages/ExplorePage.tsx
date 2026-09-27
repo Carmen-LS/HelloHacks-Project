@@ -5,6 +5,7 @@ import { Layout } from '../components/Layout'
 import { QuestCard } from '../components/QuestCard'
 import { JoinConfirmationModal } from '../components/JoinConfirmationModal'
 import { useQuests, type Quest } from '../lib/quest-context'
+import { useProfile } from '../lib/profile-context'
 
 type CategoryFilter = 'all' | 'fitness' | 'sport' | 'social'
 type SocialFilter = 'all' | 'one' | 'small' | 'large'
@@ -50,7 +51,7 @@ const intensityOptions: FilterOption[] = [
 ]
 const socialOptions: FilterOption[] = [
   { value: 'all', label: 'Any group size' },
-  { value: 'one', label: '1–1' },
+  { value: 'one', label: 'Individual Exercise' },
   { value: 'small', label: 'Small group (2–5)' },
   { value: 'large', label: 'Large group (5+)' },
 ]
@@ -99,6 +100,7 @@ function markerColor(quest: Quest) {
 
 export function ExplorePage() {
   const { quests, join, cancel, joinedQuestIds } = useQuests()
+  const { profile } = useProfile()
   const [category, setCategory] = useState<CategoryFilter>('all')
   const [intensity, setIntensity] = useState('all')
   const [social, setSocial] = useState<SocialFilter>('all')
@@ -127,6 +129,17 @@ export function ExplorePage() {
   const visibleQuests = useMemo(() => searchAreaBounds
     ? filtered.filter((quest) => quest.lat !== undefined && quest.lng !== undefined && searchAreaBounds.contains([quest.lat, quest.lng]))
     : filtered, [filtered, searchAreaBounds])
+
+  const upcomingJoinedQuests = useMemo(() => {
+    const now = Date.now()
+    return quests
+      .filter((quest) => joinedQuestIds.includes(quest.id) && new Date(`${quest.date}T${quest.time}`).getTime() >= now)
+      .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
+  }, [joinedQuestIds, quests])
+  const nearbyQuests = useMemo(() => {
+    const now = Date.now()
+    return visibleQuests.filter((quest) => !joinedQuestIds.includes(quest.id) && new Date(`${quest.date}T${quest.time}`).getTime() >= now)
+  }, [joinedQuestIds, visibleQuests])
 
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return
@@ -175,6 +188,7 @@ export function ExplorePage() {
   }, [visibleQuests, selectedQuestId, bookingQuestId])
 
   const bookingQuest = bookingQuestId ? visibleQuests.find((quest) => quest.id === bookingQuestId) : undefined
+  const bookingQuestIsHosted = Boolean(bookingQuest && bookingQuest.createdBy === profile?.name && bookingQuest.createdBy !== 'WellQuest community')
 
   const isFitness = category === 'fitness'
 
@@ -206,16 +220,19 @@ export function ExplorePage() {
         </div>
 
         <section className="discover-upcoming">
-          <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes' : 'Activities'}</h1><p>{visibleQuests.length} {visibleQuests.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
-          {visibleQuests.length ? <div className="discover-quest-list">{visibleQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} compactActions />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match this area and your filters.</p></div>}
+          <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes' : 'Activities'}</h1><p>{upcomingJoinedQuests.length + nearbyQuests.length} upcoming {upcomingJoinedQuests.length + nearbyQuests.length === 1 ? 'activity' : 'activities'} · Select a map pin to book</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
+          {upcomingJoinedQuests.length > 0 && <section className="discover-list-section" aria-labelledby="your-upcoming-quests"><h2 id="your-upcoming-quests">Your Upcoming Quests</h2><div className="discover-quest-list">{upcomingJoinedQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} compactActions />)}</div></section>}
+          <section className="discover-list-section" aria-labelledby="nearby-available-quests"><h2 id="nearby-available-quests">Available nearby</h2>{nearbyQuests.length ? <div className="discover-quest-list">{nearbyQuests.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} showActions={false} compactActions />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No available activities match this area and your filters.</p></div>}</section>
         </section>
         {bookingQuest && <JoinConfirmationModal
           quest={bookingQuest}
-          mode={joinedQuestIds.includes(bookingQuest.id) ? 'cancel' : 'join'}
+          mode={bookingQuestIsHosted ? 'details' : joinedQuestIds.includes(bookingQuest.id) ? 'cancel' : 'join'}
           onClose={() => setBookingQuestId(null)}
           onConfirm={() => {
-            if (joinedQuestIds.includes(bookingQuest.id)) cancel(bookingQuest.id)
-            else join(bookingQuest.id)
+            if (!bookingQuestIsHosted) {
+              if (joinedQuestIds.includes(bookingQuest.id)) cancel(bookingQuest.id)
+              else join(bookingQuest.id)
+            }
             setBookingQuestId(null)
           }}
         />}
