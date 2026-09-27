@@ -17,6 +17,14 @@ const contacts: Contact[] = [
   { id: 'amir-patel', name: 'Amir Patel', questIds: ['starter-walk', 'starter-stretch'] },
   { id: 'maya-singh', name: 'Maya Singh', questIds: ['starter-pickleball', 'preview-k-mobility'] },
 ]
+const attendeeNamePool = ['Noah Williams', 'Priya Kapoor', 'Ethan Brooks', 'Olivia Martin', 'Mateo Rivera', 'Grace Wilson', 'Leo Thompson', 'Ava Campbell']
+
+function otherMembersForQuest(questId: string, participantCount: number): Contact[] {
+  const count = Math.max(0, participantCount - 1)
+  const known = contacts.filter((contact) => contact.questIds.includes(questId))
+  const generated = attendeeNamePool.map((name, index) => ({ id: `${questId}-member-${index}`, name, questIds: [questId] }))
+  return [...known, ...generated].slice(0, count)
+}
 
 function ago(minutes: number) {
   return new Date(Date.now() - minutes * 60_000).toISOString()
@@ -70,6 +78,7 @@ export function ConnectionsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [store, setStore] = useState(loadStore)
   const [draft, setDraft] = useState('')
+  const [showMembers, setShowMembers] = useState(false)
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)) } catch { /* Keep this session usable without storage. */ }
@@ -80,22 +89,31 @@ export function ConnectionsPage() {
       const groups = { ...current.groups }
       for (const questId of joinedQuestIds) {
         if (groups[questId]?.length) continue
-        const attendee = contacts.find((contact) => contact.questIds.includes(questId))
         const quest = quests.find((item) => item.id === questId)
+        const attendee = otherMembersForQuest(questId, quest?.participants ?? 1)[0]
         groups[questId] = [message(`welcome-${questId}`, attendee?.id ?? 'member', `Looking forward to ${quest?.name.toLowerCase() ?? 'the quest'}!`, 0)]
       }
       return { ...current, groups }
     })
-  }, [joinedQuestIds, quests])
+  }, [joinedQuestIds, profile?.name, quests])
 
   const questNames = useMemo(() => new Map(quests.map((quest) => [quest.id, quest.name])), [quests])
+  const memberQuestIds = useMemo(() => [...new Set([
+    ...joinedQuestIds,
+    ...quests.filter((quest) => quest.createdBy === profile?.name).map((quest) => quest.id),
+  ])], [joinedQuestIds, profile?.name, quests])
+
+  const memberByQuestId = useMemo(() => new Map(quests.map((quest) => [
+    quest.id,
+    otherMembersForQuest(quest.id, quest.participants),
+  ])), [quests])
+
   const activeContacts = useMemo(() => {
-    const commonQuestIds = new Set(joinedQuestIds)
-    const discovered = contacts.filter((contact) => contact.questIds.some((id) => commonQuestIds.has(id)))
+    const discovered = memberQuestIds.flatMap((id) => memberByQuestId.get(id) ?? [])
     const visible = new Map(contacts.slice(0, 3).map((contact) => [contact.id, contact]))
     discovered.forEach((contact) => visible.set(contact.id, contact))
     return [...visible.values()]
-  }, [joinedQuestIds])
+  }, [memberByQuestId, memberQuestIds])
 
   const directRooms = useMemo<Room[]>(() => activeContacts.map((contact) => {
     const messages = store.direct[contact.id] ?? []
@@ -127,6 +145,11 @@ export function ConnectionsPage() {
 
   const rooms = view === 'direct' ? directRooms : groupRooms
   const selectedRoom = rooms.find((room) => room.id === selectedId) ?? null
+  const selectedQuest = view === 'groups' && selectedRoom ? quests.find((quest) => quest.id === selectedRoom.id) : undefined
+  const selectedMembers = selectedQuest ? [
+    { id: 'me', name: profile?.name || 'You', questIds: [selectedQuest.id] },
+    ...(memberByQuestId.get(selectedQuest.id) ?? []),
+  ] : []
 
   function sendMessage(event: FormEvent) {
     event.preventDefault()
@@ -166,10 +189,10 @@ export function ConnectionsPage() {
 
           <section className={`conversation-panel${selectedRoom ? ' open' : ''}`} aria-label="Conversation">
             {selectedRoom ? <>
-              <header className="conversation-header"><button className="conversation-back" type="button" onClick={() => setSelectedId(null)}>‹ Messages</button><span className={`message-avatar${view === 'groups' ? ' group' : ''}`}>{selectedRoom.icon}</span><div><h2>{selectedRoom.title}</h2><p>{selectedRoom.subtitle}</p></div></header>
+              <header className="conversation-header"><button className="conversation-back" type="button" onClick={() => setSelectedId(null)}>‹ Messages</button><span className={`message-avatar${view === 'groups' ? ' group' : ''}`}>{selectedRoom.icon}</span><div><h2>{selectedRoom.title}</h2><p>{selectedRoom.subtitle}</p>{view === 'groups' && <button className="view-members-button" type="button" onClick={() => setShowMembers(true)}>View members</button>}</div></header>
               <div className="conversation-messages" aria-live="polite">
                 {selectedRoom.messages.length ? selectedRoom.messages.map((entry) => {
-                  const contact = contacts.find((item) => item.id === entry.senderId)
+                  const contact = [...contacts, ...(selectedQuest ? memberByQuestId.get(selectedQuest.id) ?? [] : [])].find((item) => item.id === entry.senderId)
                   const senderName = entry.senderId === 'me' ? profile?.firstName || 'You' : contact?.name ?? 'Quest member'
                   return <article key={entry.id} className={`chat-message${entry.senderId === 'me' ? ' mine' : ''}`}>
                     {view === 'groups' && entry.senderId !== 'me' && <small>{senderName}</small>}
@@ -181,6 +204,13 @@ export function ConnectionsPage() {
             </> : <div className="conversation-placeholder"><span aria-hidden="true">✉</span><h2>Your messages</h2><p>Select a conversation to read and send messages.</p></div>}
           </section>
         </div>
+        {showMembers && selectedQuest && <div className="members-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowMembers(false) }}>
+          <section className="members-dialog" role="dialog" aria-modal="true" aria-labelledby="members-title">
+            <button className="modal-close" type="button" onClick={() => setShowMembers(false)} aria-label="Close members">×</button>
+            <p className="eyebrow">Quest chat</p><h2 id="members-title">Members · {selectedMembers.length}</h2>
+            <div className="quest-member-list">{selectedMembers.map((member) => <div className="quest-member-row" key={member.id}><span className="message-avatar">{initials(member.name)}</span><div><strong>{member.name}</strong><small>{member.id === 'me' ? 'You' : 'Attending this quest'}</small></div></div>)}</div>
+          </section>
+        </div>}
       </section>
     </Layout>
   )
