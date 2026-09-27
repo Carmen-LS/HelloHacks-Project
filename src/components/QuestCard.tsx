@@ -1,6 +1,8 @@
 import { activityIcons } from '../data/activities'
 import { useQuests, type Quest } from '../lib/quest-context'
 import { useProfile } from '../lib/profile-context'
+import { useState } from 'react'
+import { JoinConfirmationModal } from './JoinConfirmationModal'
 
 const categoryNames = {
   fitness: 'Fitness',
@@ -26,16 +28,19 @@ function formatDate(date: string, time: string) {
   }
 }
 
-export function QuestCard({ quest, featured = false }: { quest: Quest; featured?: boolean }) {
-  const { join, joinedQuestIds } = useQuests()
+export function QuestCard({ quest, featured = false, selected = false, onShowOnMap }: { quest: Quest; featured?: boolean; selected?: boolean; onShowOnMap?: () => void }) {
+  const { join, cancel, joinedQuestIds } = useQuests()
   const { profile } = useProfile()
+  const [bookingAction, setBookingAction] = useState<'join' | 'cancel' | null>(null)
   const joined = joinedQuestIds.includes(quest.id)
   const hosting = quest.createdBy === profile?.name && quest.createdBy !== 'WellQuest community'
   const full = quest.participants >= quest.spots
   const when = formatDate(quest.date, quest.time)
+  const cancelDeadline = new Date(`${quest.date}T${quest.time}`).getTime() - 60 * 60 * 1000
+  const cancellationAllowed = Date.now() < cancelDeadline
 
   return (
-    <article className={featured ? 'quest-card quest-card-featured' : 'quest-card'}>
+    <article className={`quest-card${featured ? ' quest-card-featured' : ''}${selected ? ' quest-card-selected' : ''}`}>
       <div className="quest-card-icon" aria-hidden="true">
         {quest.activityId ? activityIcons[quest.activityId] : categoryIcons[quest.category]}
       </div>
@@ -43,24 +48,30 @@ export function QuestCard({ quest, featured = false }: { quest: Quest; featured?
         <div className="quest-card-topline">
           <span className={`category-tag tag-${quest.category}`}>{categoryNames[quest.category]}</span>
           <span className="pace-tag">{intensityNames[quest.intensity]}</span>
+          {quest.partnerPreview && <span className="preview-tag">Partner preview</span>}
         </div>
         <h3>{quest.name}</h3>
+        {quest.venueName && <p className="quest-venue">{quest.venueName}{quest.trainer && <> · {quest.trainer}</>}</p>}
         <p className="quest-meta"><span aria-hidden="true">◷</span> {when.date} · {when.time}</p>
         <p className="quest-meta"><span aria-hidden="true">⌖</span> {quest.location}</p>
-        <p className="quest-meta"><span aria-hidden="true">♧</span> {quest.participants} of {quest.spots} people going</p>
+        <p className="quest-meta"><span aria-hidden="true">♧</span> {Math.max(0, quest.spots - quest.participants)} spots left · {quest.participants} going</p>
       </div>
       <div className="quest-card-actions">
-        <a className="map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(quest.location)}`} target="_blank" rel="noreferrer">View map</a>
+        {onShowOnMap ? <button className="map-link map-focus-button" type="button" onClick={onShowOnMap}>Show on map</button> : <a className="map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(quest.location)}`} target="_blank" rel="noreferrer">View map</a>}
         <button
-          className={joined ? 'join-button joined' : 'join-button'}
+          className={joined || hosting ? 'join-button joined' : 'join-button'}
           type="button"
           disabled={joined || hosting || full}
-          onClick={() => join(quest.id)}
+          onClick={() => setBookingAction('join')}
         >
-          {hosting ? 'You’re hosting' : joined ? 'You’re going' : full ? 'Full' : 'Join quest'}
+          {hosting ? 'You’re hosting' : joined ? 'Booked' : full ? 'Full' : quest.partnerPreview ? 'Reserve spot' : 'Join quest'}
           {!joined && !hosting && !full && <span aria-hidden="true"> →</span>}
         </button>
+        {joined && (cancellationAllowed
+          ? <button className="cancel-booking-link" type="button" onClick={() => setBookingAction('cancel')}>Cancel booking</button>
+          : <span className="cancel-cutoff">Cancellation window closed</span>)}
       </div>
+      {bookingAction && <JoinConfirmationModal quest={quest} mode={bookingAction} onClose={() => setBookingAction(null)} onConfirm={() => { if (bookingAction === 'join') join(quest.id); else cancel(quest.id); setBookingAction(null) }} />}
     </article>
   )
 }

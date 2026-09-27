@@ -1,55 +1,195 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { Layout } from '../components/Layout'
 import { QuestCard } from '../components/QuestCard'
-import { useQuests, type QuestCategory, type QuestIntensity } from '../lib/quest-context'
+import { useQuests, type Quest } from '../lib/quest-context'
 
-const categoryFilters: Array<{ value: QuestCategory | 'all'; label: string }> = [
-  { value: 'all', label: 'All quests' },
-  { value: 'fitness', label: 'Fitness' },
-  { value: 'sport', label: 'Sports' },
-  { value: 'outdoor', label: 'Outdoors' },
-  { value: 'other', label: 'Other' },
-]
-const intensityFilters: Array<{ value: QuestIntensity | 'all'; label: string }> = [
-  { value: 'all', label: 'Any pace' },
+type CategoryFilter = 'all' | 'fitness' | 'sport' | 'social'
+type SocialFilter = 'all' | 'one' | 'small' | 'large'
+type TimeFilter = 'all' | 'morning' | 'afternoon' | 'evening'
+type FilterOption = { value: string; label: string }
+
+function FilterAccordion({
+  id,
+  title,
+  value,
+  options,
+  expanded,
+  onToggle,
+  onChange,
+}: {
+  id: string
+  title: string
+  value: string
+  options: FilterOption[]
+  expanded: boolean
+  onToggle: () => void
+  onChange: (value: string) => void
+}) {
+  const selected = options.find((option) => option.value === value)?.label ?? options[0].label
+  return (
+    <section className={`filter-accordion${expanded ? ' expanded' : ''}`}>
+      <button className="filter-accordion-trigger" type="button" aria-expanded={expanded} aria-controls={`filter-options-${id}`} onClick={onToggle}>
+        <span className="filter-accordion-title">{title}</span>
+        <span className="filter-accordion-value">{selected}</span>
+        <span className="filter-accordion-chevron" aria-hidden="true" />
+      </button>
+      <div className="filter-accordion-options" id={`filter-options-${id}`} role="group" aria-label={title} hidden={!expanded}>
+        {options.map((option) => <button key={option.value} type="button" className={value === option.value ? 'filter-option selected' : 'filter-option'} aria-pressed={value === option.value} onClick={() => onChange(option.value)}>{option.label}</button>)}
+      </div>
+    </section>
+  )
+}
+
+const intensityOptions: FilterOption[] = [
+  { value: 'all', label: 'Any intensity' },
   { value: 'gentle', label: 'Gentle' },
   { value: 'moderate', label: 'Moderate' },
   { value: 'active', label: 'Active' },
 ]
+const socialOptions: FilterOption[] = [
+  { value: 'all', label: 'Any group size' },
+  { value: 'one', label: '1–1' },
+  { value: 'small', label: 'Small group (2–5)' },
+  { value: 'large', label: 'Large group (5+)' },
+]
+const timeOptions: FilterOption[] = [
+  { value: 'all', label: 'Any time' },
+  { value: 'morning', label: 'Morning · 5 AM–12 PM' },
+  { value: 'afternoon', label: 'Afternoon · 12–4 PM' },
+  { value: 'evening', label: 'Evening · 5–10 PM' },
+]
+
+const categories: Array<{ id: CategoryFilter; label: string; icon: string }> = [
+  { id: 'all', label: 'All', icon: '✦' },
+  { id: 'fitness', label: 'Fitness', icon: '✚' },
+  { id: 'sport', label: 'Sports', icon: '◉' },
+  { id: 'social', label: 'Social', icon: '♧' },
+]
+
+function categoryMatches(quest: Quest, category: CategoryFilter) {
+  if (category === 'all') return true
+  if (category === 'social') return quest.category === 'outdoor' || quest.category === 'other'
+  return quest.category === category
+}
+
+function groupMatches(quest: Quest, social: SocialFilter) {
+  if (social === 'all') return true
+  if (social === 'one') return quest.spots === 2
+  if (social === 'small') return quest.spots >= 2 && quest.spots <= 5
+  return quest.spots >= 5
+}
+
+function timeMatches(quest: Quest, time: TimeFilter) {
+  if (time === 'all') return true
+  const hour = Number(quest.time.split(':')[0])
+  if (time === 'morning') return hour >= 5 && hour < 12
+  if (time === 'afternoon') return hour >= 12 && hour <= 16
+  return hour >= 17 && hour <= 22
+}
+
+function markerColor(quest: Quest) {
+  if (quest.category === 'fitness') return '#4784ca'
+  if (quest.category === 'sport') return '#dd8739'
+  if (quest.category === 'outdoor') return '#267357'
+  return '#8068cb'
+}
 
 export function ExplorePage() {
   const { quests } = useQuests()
-  const [category, setCategory] = useState<QuestCategory | 'all'>('all')
-  const [intensity, setIntensity] = useState<QuestIntensity | 'all'>('all')
+  const [category, setCategory] = useState<CategoryFilter>('all')
+  const [intensity, setIntensity] = useState('all')
+  const [social, setSocial] = useState<SocialFilter>('all')
+  const [time, setTime] = useState<TimeFilter>('all')
+  const [openFilter, setOpenFilter] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [selectedQuestId, setSelectedQuestId] = useState<string | null>(null)
+  const mapEl = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<L.Map | null>(null)
+  const markersRef = useRef<L.LayerGroup | null>(null)
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     return [...quests]
-      .filter((quest) => (category === 'all' || quest.category === category) && (intensity === 'all' || quest.intensity === intensity))
-      .filter((quest) => needle.length === 0 || quest.name.toLowerCase().includes(needle) || quest.location.toLowerCase().includes(needle))
+      .filter((quest) => categoryMatches(quest, category))
+      .filter((quest) => intensity === 'all' || quest.intensity === intensity)
+      .filter((quest) => groupMatches(quest, social) && timeMatches(quest, time))
+      .filter((quest) => needle.length === 0 || [quest.name, quest.location, quest.venueName ?? '', quest.trainer ?? ''].some((value) => value.toLowerCase().includes(needle)))
       .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`))
-  }, [category, intensity, query, quests])
+  }, [category, intensity, query, quests, social, time])
+
+  useEffect(() => {
+    if (!mapEl.current || mapRef.current) return
+    const map = L.map(mapEl.current, { zoomControl: false }).setView([49.279, -123.119], 11.5)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map)
+    L.control.zoom({ position: 'topright' }).addTo(map)
+    markersRef.current = L.layerGroup().addTo(map)
+    mapRef.current = map
+    return () => {
+      map.remove()
+      mapRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    const markers = markersRef.current
+    if (!map || !markers) return
+    markers.clearLayers()
+    filtered.forEach((quest) => {
+      if (quest.lat === undefined || quest.lng === undefined) return
+      const selected = quest.id === selectedQuestId
+      const marker = L.circleMarker([quest.lat, quest.lng], {
+        radius: selected ? 13 : 9,
+        color: '#fffefa',
+        fillColor: markerColor(quest),
+        fillOpacity: 1,
+        weight: selected ? 4 : 3,
+      }).bindTooltip(quest.name, { direction: 'top', offset: [0, -8] })
+      marker.on('click', () => setSelectedQuestId(quest.id))
+      markers.addLayer(marker)
+    })
+    const selected = filtered.find((quest) => quest.id === selectedQuestId)
+    if (selected?.lat !== undefined && selected.lng !== undefined) {
+      map.flyTo([selected.lat, selected.lng], 13, { duration: 0.35 })
+    }
+  }, [filtered, selectedQuestId])
+
+  useEffect(() => {
+    if (selectedQuestId && !filtered.some((quest) => quest.id === selectedQuestId)) setSelectedQuestId(null)
+  }, [filtered, selectedQuestId])
+
+  const isFitness = category === 'fitness'
 
   return (
     <Layout>
-      <section className="page-intro explore-intro">
-        <div><p className="eyebrow">Find your people, find your pace</p><h1>Discover quests</h1><p>Friendly activities and easy ways to get moving, all around your neighbourhood.</p></div>
-        <Link className="subtle-link" to="/map">Explore places on the map <span aria-hidden="true">↗</span></Link>
-      </section>
-
-      <section className="discover-controls" aria-label="Filter quests">
-        <label className="search-field"><span aria-hidden="true">⌕</span><span className="sr-only">Search activities, locations, or keywords</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search activities, places, or keywords" /></label>
-        <div className="category-filter" aria-label="Activity category">
-          {categoryFilters.map((item) => <button key={item.value} type="button" className={category === item.value ? 'filter-chip active' : 'filter-chip'} aria-pressed={category === item.value} onClick={() => setCategory(item.value)}>{item.label}</button>)}
+      <section className="discover-page" aria-label="Discover nearby activities">
+        <div className="discover-toolbar">
+          <label className="search-field"><span aria-hidden="true">⌕</span><span className="sr-only">Search activities, locations, or keywords</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search activities, location, or keywords..." /></label>
+          <button className="filter-toggle" type="button" onClick={() => document.getElementById('discover-filters')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} aria-label="Jump to activity filters"><span aria-hidden="true">☷</span></button>
         </div>
-        <label className="select-filter">Pace <select value={intensity} onChange={(event) => setIntensity(event.target.value as QuestIntensity | 'all')}>{intensityFilters.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>
-      </section>
+        <div className="discover-categories" role="group" aria-label="Activity category">
+          {categories.map((item) => <button key={item.id} type="button" className={`discover-category ${item.id}${category === item.id ? ' active' : ''}`} aria-pressed={category === item.id} onClick={() => setCategory(item.id)}><span aria-hidden="true">{item.icon}</span>{item.label}</button>)}
+        </div>
 
-      <section className="discover-results">
-        <div className="section-heading results-heading"><div><p className="eyebrow">Make a plan together</p><h2>Upcoming activities near you</h2></div><span className="results-count">{filtered.length} {filtered.length === 1 ? 'quest' : 'quests'}</span></div>
-        {filtered.length > 0 ? <div className="quest-list">{filtered.map((quest) => <QuestCard key={quest.id} quest={quest} />)}</div> : <div className="empty-card"><span aria-hidden="true">🌤️</span><h3>No quests found just yet</h3><p>Try another search or make the first plan for your neighbourhood.</p><Link className="primary inline-primary" to="/home">Back home</Link></div>}
+        <div className="discover-filter-bar" id="discover-filters">
+          <FilterAccordion id="intensity" title="Intensity" value={intensity} options={intensityOptions} expanded={openFilter === 'intensity'} onToggle={() => setOpenFilter(openFilter === 'intensity' ? null : 'intensity')} onChange={(value) => setIntensity(value)} />
+          <FilterAccordion id="social" title="Social preference" value={social} options={socialOptions} expanded={openFilter === 'social'} onToggle={() => setOpenFilter(openFilter === 'social' ? null : 'social')} onChange={(value) => setSocial(value as SocialFilter)} />
+          <FilterAccordion id="time" title="Time of day" value={time} options={timeOptions} expanded={openFilter === 'time'} onToggle={() => setOpenFilter(openFilter === 'time' ? null : 'time')} onChange={(value) => setTime(value as TimeFilter)} />
+        </div>
+
+        {isFitness && <div className="partner-notice"><span aria-hidden="true">✦</span><p><strong>Fitness partner preview.</strong> Venue addresses are based on official listings. Class schedules, coaches, and spaces left are sample data until gym partners connect.</p></div>}
+
+        <div className="discover-map-wrap">
+          <div ref={mapEl} className="discover-map" role="application" aria-label="Map of upcoming Vancouver activities" />
+          <div className="map-area-label"><span className="map-area-dot" /> Vancouver &amp; nearby</div>
+        </div>
+
+        <section className="discover-upcoming">
+          <div className="discover-upcoming-heading"><div><h1>{isFitness ? 'Fitness classes near you' : 'Upcoming activities near you'}</h1><p>{filtered.length} {filtered.length === 1 ? 'activity' : 'activities'} · Select a map pin to see its card</p></div><span className="upcoming-arrow" aria-hidden="true">→</span></div>
+          {filtered.length ? <div className="discover-quest-rail">{filtered.map((quest) => <QuestCard key={quest.id} quest={quest} selected={quest.id === selectedQuestId} onShowOnMap={() => { setSelectedQuestId(quest.id); if (quest.lat !== undefined && quest.lng !== undefined) mapRef.current?.flyTo([quest.lat, quest.lng], 13) }} />)}</div> : <div className="discover-no-results"><span aria-hidden="true">☀</span><p>No activities match these filters. Try another time or group size.</p></div>}
+        </section>
       </section>
     </Layout>
   )
